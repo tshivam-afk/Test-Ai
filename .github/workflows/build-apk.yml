@@ -96,9 +96,9 @@ jobs:
           # 1. Generate or Restore Keystore
           if [ -z "$SIGNING_KEY" ]; then
             echo "No ANDROID_SIGNING_KEY secret found. Generating temporary self-signed keystore..."
-            keytool -genkeypair -v -keystore temp.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey -storepass tempstorepass -keypass tempkeypass -dname "CN=Lumen, O=Lumen Prep, C=US"
-            STORE_PASS="tempstorepass"
-            KEY_PASS="tempkeypass"
+            keytool -genkeypair -v -keystore temp.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey -storepass temppassword -keypass temppassword -dname "CN=Lumen, O=Lumen Prep, C=US"
+            STORE_PASS="temppassword"
+            KEY_PASS="temppassword"
             ALIAS="mykey"
           else
             echo "Using user-provided repository secrets for signing..."
