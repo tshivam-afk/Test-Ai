@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   Flag,
@@ -58,59 +58,82 @@ export default function QuizView({
   const [questionSeconds, setQuestionSeconds] = useState(0);
   const [omrFilter, setOmrFilter] = useState<"all" | "review" | "answered" | "blank">("all");
 
+  // 1. Local Time State & Synchronized auto-save mechanics to block render-loops
+  const [localTimeSpent, setLocalTimeSpent] = useState(timeSpent || 0);
+  const localTimeRef = useRef(localTimeSpent);
+
+  useEffect(() => {
+    localTimeRef.current = localTimeSpent;
+  }, [localTimeSpent]);
+
+  // Sync state if different test or props reload cleanly
+  useEffect(() => {
+    setLocalTimeSpent(timeSpent || 0);
+  }, [test.id, timeSpent]);
+
+  // Unified safe progress saver that guarantees timeSpent tracking
+  const saveProgress = (partial: Partial<TestProgress>) => {
+    onUpdateProgress({
+      ...partial,
+      timeSpent: localTimeRef.current,
+    });
+  };
+
+  const handleLeaveQuiz = () => {
+    onUpdateProgress({ timeSpent: localTimeRef.current });
+    onBackToLibrary();
+  };
+
   // NEET scoring scheme multipliers (+4, -1)
   const NEET_CORRECT_SCORE = 4;
   const NEET_INCORRECT_SCORE = -1;
 
-  // Real-time ticking time spent increment
+  // Real-time ticking time spent increment running entirely locally without triggering App re-renders
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     if (timerActive && !isCompleted) {
       intervalId = setInterval(() => {
-        onUpdateProgress({
-          timeSpent: timeSpent + 1,
-        });
-      }, 1000);
-    }
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [timerActive, timeSpent, isCompleted]);
-
-  // Question-wise timer resetting on question change
-  useEffect(() => {
-    setQuestionSeconds(0);
-  }, [currentQuestion.number]);
-
-  useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    if (timerActive && !isCompleted) {
-      intervalId = setInterval(() => {
+        setLocalTimeSpent((prev) => prev + 1);
         setQuestionSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [timerActive, isCompleted, currentQuestion.number]);
+  }, [timerActive, isCompleted]);
+
+  // Question-wise timer resetting on question change
+  useEffect(() => {
+    setQuestionSeconds(0);
+  }, [currentQuestion.number]);
+
+  // Background silent periodic sync to parent state (every 5 seconds)
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      if (timerActive && !isCompleted) {
+        onUpdateProgress({ timeSpent: localTimeRef.current });
+      }
+    }, 5000);
+    return () => clearInterval(syncInterval);
+  }, [timerActive, isCompleted, onUpdateProgress]);
 
   // Handle paginate actions
   const handleJumpToQuestion = (qNumber: number) => {
-    onUpdateProgress({ lastActiveQuestionNumber: qNumber });
+    saveProgress({ lastActiveQuestionNumber: qNumber });
     setOmrOpen(false);
   };
 
   const handleNext = () => {
     if (activeIdx < test.questions.length - 1) {
       const nextQ = test.questions[activeIdx + 1];
-      onUpdateProgress({ lastActiveQuestionNumber: nextQ.number });
+      saveProgress({ lastActiveQuestionNumber: nextQ.number });
     }
   };
 
   const handlePrev = () => {
     if (activeIdx > 0) {
       const prevQ = test.questions[activeIdx - 1];
-      onUpdateProgress({ lastActiveQuestionNumber: prevQ.number });
+      saveProgress({ lastActiveQuestionNumber: prevQ.number });
     }
   };
 
@@ -120,7 +143,7 @@ export default function QuizView({
     const updatedFlagged = isFlagged
       ? flagged.filter((n) => n !== qNum)
       : [...flagged, qNum];
-    onUpdateProgress({ flagged: updatedFlagged });
+    saveProgress({ flagged: updatedFlagged });
   };
 
   // Toggle stars
@@ -129,7 +152,7 @@ export default function QuizView({
     const updatedBookmarked = isBookmarked
       ? bookmarked.filter((n) => n !== qNum)
       : [...bookmarked, qNum];
-    onUpdateProgress({ bookmarked: updatedBookmarked });
+    saveProgress({ bookmarked: updatedBookmarked });
   };
 
   // Option selection
@@ -137,24 +160,27 @@ export default function QuizView({
     if (isCompleted) return; // Locked on complete
 
     const updatedAnswers = { ...answers, [currentQuestion.number]: optionIdx };
-    onUpdateProgress({ answers: updatedAnswers });
+    saveProgress({ answers: updatedAnswers });
   };
 
   // Select confidence level
   const handleSelectConfidence = (level: string) => {
     const updatedConfidences = { ...confidences, [currentQuestion.number]: level };
-    onUpdateProgress({ confidences: updatedConfidences });
+    saveProgress({ confidences: updatedConfidences });
   };
 
   // Draft pad notes update
   const handleNotesChange = (text: string) => {
     const updatedNotes = { ...userNotes, [currentQuestion.number]: text };
-    onUpdateProgress({ userNotes: updatedNotes });
+    saveProgress({ userNotes: updatedNotes });
   };
 
   // Clean wipe to retry test
   const handleResetTestSession = () => {
     if (confirm("Reset test progress, reset metrics and restart this paper?")) {
+      setLocalTimeSpent(0);
+      setQuestionSeconds(0);
+      localTimeRef.current = 0;
       onUpdateProgress({
         answers: {},
         flagged: [],
@@ -192,6 +218,7 @@ export default function QuizView({
 
       onUpdateProgress({
         completed: true,
+        timeSpent: localTimeRef.current,
         score: {
           correctCount: correct,
           incorrectCount: incorrect,
@@ -223,7 +250,7 @@ export default function QuizView({
         <div className="flex items-center gap-2">
           <button
             id="back-to-library-nav"
-            onClick={onBackToLibrary}
+            onClick={handleLeaveQuiz}
             className="p-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 cursor-pointer transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -245,12 +272,12 @@ export default function QuizView({
             className="bg-slate-50 dark:bg-[#18181b] text-[11px] font-mono px-2 py-1 rounded-lg text-slate-700 dark:text-zinc-300 flex items-center gap-1 border border-slate-150/55 dark:border-zinc-800"
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>{formatTimer(timeSpent)}</span>
+            <span>{formatTimer(localTimeSpent)}</span>
             <button
-              id="quiz-timer-pause-toggle"
-              onClick={() => setTimerActive(!timerActive)}
-              className="ml-1 focus:outline-none"
-              title="Pause/Run time tracker"
+               id="quiz-timer-pause-toggle"
+               onClick={() => setTimerActive(!timerActive)}
+               className="ml-1 focus:outline-none"
+               title="Pause/Run time tracker"
             >
               {timerActive ? (
                 <Pause className="w-2.5 h-2.5 text-slate-400 hover:text-red-400" />
@@ -385,7 +412,7 @@ export default function QuizView({
             <div className="mt-6 flex gap-2.5">
               <button
                 id="view-review-paper"
-                onClick={() => onUpdateProgress({ completed: false })} // Re-unlocks for revision/reviewing
+                onClick={() => saveProgress({ completed: false })} // Re-unlocks for revision/reviewing
                 className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-900/10 transition-colors cursor-pointer"
               >
                 Review Explanation Slides
