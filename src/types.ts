@@ -21,6 +21,7 @@ export interface TestProgress {
   flagged: number[]; // Array of flagged question numbers
   bookmarked: number[]; // Array of bookmarked question numbers for focused lists
   userNotes: Record<number, string>; // Maps question number to custom written study notes
+  confidences?: Record<number, string>; // Maps question number to confidence level ('sure' | 'guess' | 'doubt')
   timeSpent: number; // Time elapsed in seconds
   completed: boolean;
   score?: {

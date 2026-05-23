@@ -190,7 +190,17 @@ export default function App() {
 
   const handleUpdateTestProgress = (testId: string, partial: Partial<TestProgress>) => {
     setProgress((prev) => {
-      const existing = getOrCreateProgressRecord(testId);
+      const existing = prev[testId] || {
+        testId,
+        answers: {},
+        flagged: [],
+        bookmarked: [],
+        userNotes: {},
+        timeSpent: 0,
+        completed: false,
+        lastActiveQuestionNumber: tests.find((t) => t.id === testId)?.questions[0]?.number || 1,
+        lastUpdatedAt: new Date().toISOString(),
+      };
       const updated: TestProgress = {
         ...existing,
         ...partial,
