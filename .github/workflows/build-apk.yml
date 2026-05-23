@@ -12,7 +12,7 @@ on:
         required: true
         default: '2.5.0'
       build_type:
-        description: 'Build Type (Release / Debug)'
+        description: 'Build Type (release / debug)'
         required: true
         default: 'release'
         type: choice
@@ -47,6 +47,11 @@ jobs:
           npm ci
           npm run build
 
+      - name: Initialize Android Native Wrapper with Capacitor
+        run: |
+          npx cap add android
+          npx cap sync
+
       - name: Setup Android SDK Build tools
         uses: android-actions/setup-android@v3
 
@@ -68,16 +73,23 @@ jobs:
           fi
 
       - name: Grant Execute Permission to Gradlew
-        run: chmod +x android/gradlew
+        run: |
+          chmod +x android/gradlew
         continue-on-error: true
 
       - name: Compile and Assemble APK
         run: |
-          cd android && ./gradlew assembleRelease
+          cd android
+          if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+            ./gradlew assembleDebug
+          else
+            ./gradlew assembleRelease
+          fi
         continue-on-error: true
 
       - name: Sign Release APK
         id: sign_app_apk
+        if: github.event.inputs.build_type == 'release'
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: android/app/build/outputs/apk/release
@@ -90,7 +102,7 @@ jobs:
       - name: Upload Finished APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: neet-prep-signed-${{ github.event.inputs.version_name }}
+          name: neet-prep-apks-${{ github.event.inputs.version_name }}
           path: |
             android/app/build/outputs/apk/release/*.apk
             android/app/build/outputs/apk/debug/*.apk

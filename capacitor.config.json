@@ -1,0 +1,8 @@
+{
+  "appId": "com.lumen.neetprep",
+  "appName": "Lumen NEET Prep",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
