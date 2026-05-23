@@ -1,0 +1,8 @@
+{
+  "name": "Practice Test Companion",
+  "description": "An interactive study app to upload PDFs of questions & solutions and practice them in real-time with automatic progress saving.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

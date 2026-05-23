@@ -1,0 +1,246 @@
+import { useState } from "react";
+import {
+  Plus,
+  Search,
+  FileText,
+  Clock,
+  ArrowRight,
+  Trash2,
+  BookOpen,
+  Sparkles,
+  Award
+} from "lucide-react";
+import { Test, TestProgress } from "../types";
+
+interface TestLibraryProps {
+  tests: Test[];
+  progress: Record<string, TestProgress>;
+  onSelectTest: (testId: string) => void;
+  onDeleteTest: (testId: string) => void;
+  onOpenUpload: () => void;
+}
+
+export default function TestLibrary({
+  tests,
+  progress,
+  onSelectTest,
+  onDeleteTest,
+  onOpenUpload,
+}: TestLibraryProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTests = tests.filter((t) =>
+    t.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Calculate high level student achievements
+  const totalTestsCount = tests.length;
+  const totalTimeSeconds = Object.values(progress).reduce(
+    (sum, cur) => sum + (cur.timeSpent || 0),
+    0
+  );
+  const totalQuestionsAnswered = Object.values(progress).reduce(
+    (sum, cur) => sum + Object.keys(cur.answers || {}).length,
+    0
+  );
+
+  const formatHours = (seconds: number) => {
+    if (seconds <= 0) return "0m";
+    const mins = Math.ceil(seconds / 60);
+    if (mins < 60) return `${mins}m`;
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return `${hrs}h ${remMins}m`;
+  };
+
+  return (
+    <div id="library-root" className="flex-1 flex flex-col p-4 overflow-y-auto custom-scrollbar">
+      {/* Title greeting bar */}
+      <header id="library-header" className="flex items-center justify-between mb-5">
+        <div>
+          <span className="text-[10px] font-extrabold tracking-widest text-indigo-400 uppercase">
+            Workbook Desk
+          </span>
+          <h2 className="font-extrabold text-2xl text-slate-900 dark:text-zinc-100 tracking-tight">
+            Study Companion
+          </h2>
+        </div>
+        <div className="w-9 h-9 rounded-full bg-indigo-650 text-white dark:bg-indigo-600 dark:text-zinc-100 flex items-center justify-center font-bold text-xs shadow-md">
+          NEET
+        </div>
+      </header>
+
+      {/* Stats Summary Bento grid */}
+      <div id="stats-bento" className="grid grid-cols-3 gap-2.5 mb-5 select-none">
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-100 dark:border-zinc-800 flex flex-col justify-between shadow-xs">
+          <BookOpen className="w-5 h-5 text-indigo-500 mb-2" />
+          <div>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium block mb-0.5">
+              Workbooks
+            </span>
+            <span className="font-extrabold text-lg text-slate-900 dark:text-zinc-100 leading-none">
+              {totalTestsCount}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-100 dark:border-zinc-800 flex flex-col justify-between shadow-xs">
+          <Clock className="w-5 h-5 text-emerald-500 mb-2 animate-pulse" />
+          <div>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium block mb-0.5">
+              Time Spent
+            </span>
+            <span className="font-extrabold text-lg text-slate-900 dark:text-zinc-100 leading-none truncate block">
+              {formatHours(totalTimeSeconds)}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-100 dark:border-zinc-800 flex flex-col justify-between shadow-xs">
+          <Award className="w-5 h-5 text-amber-500 mb-2" />
+          <div>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium block mb-0.5">
+              Solved Qs
+            </span>
+            <span className="font-extrabold text-lg text-slate-900 dark:text-zinc-100 leading-none">
+              {totalQuestionsAnswered}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and control bar */}
+      <div id="search-bar" className="flex items-center gap-2 mb-4">
+        <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-zinc-850 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
+          <Search className="w-4 h-4 text-slate-400" />
+          <input
+            id="test-search-field"
+            type="text"
+            placeholder="Search workbooks, subjects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1 bg-transparent text-xs text-slate-800 dark:text-zinc-200 placeholder-zinc-700 dark:placeholder-zinc-700 outline-none focus:outline-none"
+          />
+        </div>
+
+        <button
+          id="btn-trigger-upload"
+          onClick={onOpenUpload}
+          className="p-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-650/10 active:scale-95 transition-all duration-155 cursor-pointer"
+          title="Import question set"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Worksheet List Section */}
+      <div id="tests-list-container" className="flex-1 space-y-3">
+        <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-500 tracking-wider">
+          PRACTICE WORKBOOKS
+        </h3>
+
+        {filteredTests.length === 0 ? (
+          <div
+            id="empty-library-state"
+            className="flex flex-col items-center justify-center py-12 px-6 bg-white dark:bg-[#18181b] rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800 transition-colors text-center"
+          >
+            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-855 flex items-center justify-center mb-3">
+              <FileText className="w-5 h-5 text-slate-400" />
+            </div>
+            <p className="text-sm font-bold text-slate-800 dark:text-zinc-200">
+              No matching workbooks
+            </p>
+            <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1 max-w-[240px]">
+              Tap the plus button to analyze and study.
+            </p>
+          </div>
+        ) : (
+          filteredTests.map((test) => {
+            const prog = progress[test.id];
+            const answeredCount = prog ? Object.keys(prog.answers || {}).length : 0;
+            const totalCount = test.questions.length;
+            const isCompleted = prog?.completed || false;
+            const progressPercent =
+              totalCount > 0 ? Math.floor((answeredCount / totalCount) * 100) : 0;
+
+            return (
+              <div
+                id={`test-card-${test.id}`}
+                key={test.id}
+                className="p-4 bg-white dark:bg-[#121214] border border-slate-100 dark:border-zinc-800/80 rounded-2xl hover:shadow-md hover:border-zinc-700/50 dark:hover:border-zinc-700/50 transition-all flex flex-col relative group"
+              >
+                {/* Header Row */}
+                <div className="flex items-start justify-between gap-3 mb-2.5">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        {totalCount} Questions
+                      </span>
+                      {test.isSample && (
+                        <span className="text-[9px] font-extrabold tracking-wide px-1.5 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                          <Sparkles className="w-2.5 h-2.5" /> Sample Class Test
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-bold text-sm text-slate-905 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
+                      {test.title}
+                    </h4>
+                  </div>
+
+                  {/* Delete Option (do not allow deleting default sample to keep fail-safe active) */}
+                  {!test.isSample && (
+                    <button
+                      id={`delete-btn-${test.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm("Permanently archive this companion test?")) {
+                          onDeleteTest(test.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-red-505 dark:text-zinc-650 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                      aria-label="Delete test paper"
+                    >
+                      <Trash2 className="w-3.8 h-3.8" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Progress Indicators */}
+                <div className="flex items-center justify-between text-[11px] text-slate-505 dark:text-zinc-500 mb-2 mt-auto">
+                  <span>
+                    {isCompleted
+                      ? "Test Reviewed"
+                      : answeredCount > 0
+                      ? `In Progress (${answeredCount}/${totalCount})`
+                      : "Unstarted"}
+                  </span>
+                  <span className="font-bold">{progressPercent}%</span>
+                </div>
+
+                {/* Simulated dynamic progress bar width */}
+                <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-4">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${
+                      isCompleted ? "bg-emerald-500" : "bg-indigo-500"
+                    }`}
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+
+                {/* Launch / Practice Resume Actions */}
+                <button
+                  id={`launch-test-${test.id}`}
+                  onClick={() => onSelectTest(test.id)}
+                  className="w-full py-2.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 rounded-xl text-xs font-bold text-slate-800 dark:text-zinc-150 flex items-center justify-center gap-1 cursor-pointer transition-colors border border-slate-200/40 dark:border-zinc-800"
+                >
+                  {answeredCount > 0 && !isCompleted ? "Resume Practice Session" : "Start Study Session"}
+                  <ArrowRight className="w-3.5 h-3.5 text-indigo-400" />
+                </button>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
