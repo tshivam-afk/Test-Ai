@@ -1,0 +1,96 @@
+name: Build Signed Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Android App Version Code'
+        required: true
+        default: '12'
+      version_name:
+        description: 'Android App Version Name'
+        required: true
+        default: '2.5.0'
+      build_type:
+        description: 'Build Type (Release / Debug)'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+
+jobs:
+  build:
+    name: Build & Sign Android Application
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java Development Kit (JDK) 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Install Node.js Dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Build Web Production Assets
+        run: |
+          npm ci
+          npm run build
+
+      - name: Setup Android SDK Build tools
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Inject Custom Version Codes
+        run: |
+          if [ -f android/app/build.gradle ]; then
+            sed -i "s/versionCode [0-9]*/versionCode ${{ github.event.inputs.version_code }}/" android/app/build.gradle
+            sed -i "s/versionName \"[^\"]*\"/versionName \"${{ github.event.inputs.version_name }}\"/" android/app/build.gradle
+          fi
+
+      - name: Grant Execute Permission to Gradlew
+        run: chmod +x android/gradlew
+        continue-on-error: true
+
+      - name: Compile and Assemble APK
+        run: |
+          cd android && ./gradlew assembleRelease
+        continue-on-error: true
+
+      - name: Sign Release APK
+        id: sign_app_apk
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        continue-on-error: true
+
+      - name: Upload Finished APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: neet-prep-signed-${{ github.event.inputs.version_name }}
+          path: |
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/debug/*.apk

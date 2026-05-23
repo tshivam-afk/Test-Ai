@@ -133,6 +133,43 @@ export default function TestLibrary({
         </button>
       </div>
 
+      {/* High-Yield Biology Exclusive practicing panel (Q91-Q180) */}
+      <div id="biology-yield-pnl" className="mb-5 p-4 rounded-3xl bg-gradient-to-br from-indigo-900/10 via-indigo-950/5 to-purple-900/5 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-150/40 dark:border-indigo-950/40 shadow-xs relative overflow-hidden flex flex-col justify-between">
+        <div className="absolute top-0 right-0 p-3 text-3xl opacity-15 select-none pointer-events-none">
+          🧬
+        </div>
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/10 flex items-center justify-center shrink-0">
+            <span className="text-xl">🧬</span>
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-600 text-white tracking-wider uppercase">
+                NEET 91-180 exclusive
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                Botany & Zoology
+              </span>
+            </div>
+            <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 mt-1.5 tracking-tight">
+              NEET Biology Section Practice
+            </h4>
+            <p className="text-[11px] text-slate-505 dark:text-zinc-450 leading-normal mt-0.5">
+              Practice 90 high-yield botanical & physiological questions specifically mapped to index sequence <strong>Q91 - Q180</strong>.
+            </p>
+          </div>
+        </div>
+
+        <button
+          id="btn-quicklaunch-biology"
+          onClick={() => onSelectTest("neet-biology-marathon-q91-180")}
+          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 hover:shadow-md text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+        >
+          <span>Launch Biology Sector (91-180 Only)</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       {/* Worksheet List Section */}
       <div id="tests-list-container" className="flex-1 space-y-3">
         <h3 className="text-xs font-semibold text-slate-500 dark:text-zinc-500 tracking-wider">
