@@ -119,6 +119,8 @@ export default function SyncSettingsModal({
         errMsg = "Password should be at least 6 characters long.";
       } else if (e.code === "auth/invalid-email") {
         errMsg = "Please provide a valid email format.";
+      } else if (e.code === "auth/operation-not-allowed") {
+        errMsg = "Email/Password sign-in has not been enabled in your Firebase Console projects yet. Follow the steps below to enable it.";
       }
       setSyncMessage({ text: errMsg, type: "error" });
     } finally {
@@ -333,6 +335,32 @@ export default function SyncSettingsModal({
                 <CloudLightning className="w-4.5 h-4.5 shrink-0 text-indigo-500 animate-pulse" />
               )}
               <span className="flex-1">{syncMessage.text}</span>
+            </div>
+          )}
+
+          {syncMessage?.text?.includes("enabled") && (
+            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-2xl p-4 text-xs space-y-2 text-amber-900 dark:text-amber-300 animate-slide-up">
+              <h5 className="font-extrabold flex items-center gap-1.5 uppercase text-[11px] tracking-wider text-amber-800 dark:text-amber-400">
+                <ShieldAlert className="w-4 h-4 text-amber-500" />
+                Easy 2-Click Setup Required
+              </h5>
+              <p className="text-[11px] leading-relaxed text-slate-600 dark:text-zinc-400">
+                Firebase projects have Email login turned off by default. To enable it:
+              </p>
+              <ol className="list-decimal list-inside space-y-1.5 text-[11.5px] leading-relaxed">
+                <li>
+                  Open your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-550 transition-colors">Firebase Console</a>.
+                </li>
+                <li>
+                  Go to <strong>Authentication</strong> &gt; <strong>Sign-in method</strong> tab.
+                </li>
+                <li>
+                  Click <strong>Add new provider</strong> (or edit "Email/Password" if listed).
+                </li>
+                <li>
+                  Select <strong>Email/Password</strong>, set it to <strong>Enable</strong>, and click <strong>Save</strong>.
+                </li>
+              </ol>
             </div>
           )}
 

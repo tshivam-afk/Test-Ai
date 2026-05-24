@@ -21,17 +21,23 @@ service cloud.firestore {
 
     // User's custom uploaded Workbooks
     match /users/{userId}/workbooks/{workbookId} {
-      allow read, write, delete: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow create, update, delete: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
     }
 
     // User's progression state record of each Workbook
     match /users/{userId}/progress/{workbookId} {
-      allow read, write, delete: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow create, update, delete: if isOwner(userId) && isValidId(userId) && isValidId(workbookId);
     }
 
     // User's final submitted Exam analysis history logs
     match /users/{userId}/history/{historyId} {
-      allow read, write, delete: if isOwner(userId) && isValidId(userId) && isValidId(historyId);
+      allow get: if isOwner(userId) && isValidId(userId) && isValidId(historyId);
+      allow list: if isOwner(userId) && isValidId(userId);
+      allow create, update, delete: if isOwner(userId) && isValidId(userId) && isValidId(historyId);
     }
   }
 }
