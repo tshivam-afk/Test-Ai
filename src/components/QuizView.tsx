@@ -256,10 +256,10 @@ export default function QuizView({
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div>
-            <h4 className="font-bold text-xs text-slate-805 dark:text-zinc-200 line-clamp-1 max-w-[160px]">
+            <h4 className="font-bold text-xs text-slate-800 dark:text-zinc-200 line-clamp-1 max-w-[160px]">
               {test.title}
             </h4>
-            <span className="text-[10px] text-slate-405 dark:text-zinc-400 font-bold block mt-0.5">
+            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold block mt-0.5">
               Subject: {currentQuestion.subject}
             </span>
           </div>
@@ -431,7 +431,7 @@ export default function QuizView({
           /* Active Question details */
           <div id="active-question-card" className="space-y-4">
             {/* Mode segment selector to toggle workspace behavior */}
-            <div className="bg-slate-105 dark:bg-[#121214] p-1.5 relative rounded-2xl flex select-none border border-slate-200/50 dark:border-zinc-805/70 shadow-inner">
+            <div className="bg-slate-100 dark:bg-[#121214] p-1.5 relative rounded-2xl flex select-none border border-slate-200 dark:border-zinc-800 shadow-inner">
               <button
                 id="toggle-study-mode-inline"
                 onClick={() => onChangeMode("study")}
@@ -522,11 +522,11 @@ export default function QuizView({
             </div>
 
             {/* Speed warning / pacing indicator */}
-            <div className="bg-slate-50/50 dark:bg-zinc-900/40 border border-slate-150 dark:border-zinc-850 p-2 rounded-xl flex items-center justify-between text-[11px] px-3 select-none">
+            <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-2 rounded-xl flex items-center justify-between text-[11px] px-3 select-none">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2 h-2 rounded-full ${questionSeconds > 60 ? "bg-red-500 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
-                <span className="text-slate-500 dark:text-zinc-400">
-                  Question timer: <span className={`font-mono font-bold ${questionSeconds > 60 ? "text-red-500 font-extrabold" : "text-emerald-500"}`}>{questionSeconds}s</span> <span className="text-[10px] text-slate-450 dark:text-zinc-500">(Target: &lt; 60s)</span>
+                <span className="text-slate-550 dark:text-zinc-400">
+                  Question timer: <span className={`font-mono font-bold ${questionSeconds > 60 ? "text-red-500 font-extrabold" : "text-emerald-500"}`}>{questionSeconds}s</span> <span className="text-[10px] text-slate-400 dark:text-zinc-500">(Target: &lt; 60s)</span>
                 </span>
               </div>
               {questionSeconds > 60 && (
@@ -537,9 +537,9 @@ export default function QuizView({
             </div>
 
             {/* Question Text with support for custom workspace scrolling */}
-            <div id="question-text-field" className="bg-white dark:bg-[#18181b] p-4 rounded-2xl border border-slate-100 dark:border-zinc-800/80">
-              <p className={`text-slate-800 dark:text-zinc-150 leading-relaxed whitespace-pre-line ${
-                fontSize === "lg" ? "text-base font-bold" : fontSize === "base" ? "text-sm font-semibold" : "text-xs font-medium"
+            <div id="question-text-field" className="bg-white dark:bg-[#18181b] p-5 shadow-xs rounded-2xl border border-slate-200 dark:border-zinc-800/80">
+              <p className={`text-slate-905 dark:text-zinc-50 leading-relaxed whitespace-pre-line tracking-wide ${
+                fontSize === "lg" ? "text-lg font-bold" : fontSize === "base" ? "text-base font-semibold" : "text-sm font-medium"
               }`}>
                 {currentQuestion.questionText}
               </p>
@@ -554,22 +554,22 @@ export default function QuizView({
 
                 // Configure immediate colors for STUDY mode feedback
                 let optionStyleClass =
-                  "border-slate-150 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-800 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-[#18181b]";
+                  "border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-900 dark:text-zinc-50 hover:bg-slate-50 dark:hover:bg-[#18181b]";
 
                 if (practiceMode === "study" && hasAnswered) {
                   if (isCorrect) {
                     optionStyleClass =
-                      "border-emerald-500 dark:border-emerald-600 bg-emerald-500/10 dark:bg-emerald-950/10 text-emerald-600 dark:text-emerald-400";
+                      "border-emerald-500 dark:border-emerald-600 bg-emerald-500/10 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 font-semibold";
                   } else if (isSelected) {
                     optionStyleClass =
-                      "border-red-500 dark:border-red-600 bg-red-500/10 dark:bg-red-950/10 text-red-600 dark:text-red-400";
+                      "border-red-500 dark:border-red-600 bg-red-500/10 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-semibold";
                   } else {
-                    optionStyleClass = "border-slate-150 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-550 opacity-50";
+                    optionStyleClass = "border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-500 opacity-40";
                   }
                 } else if (practiceMode === "exam") {
                   if (isSelected) {
                     optionStyleClass =
-                      "border-indigo-500 dark:border-indigo-505 bg-indigo-500/10 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 shadow-sm ring-2 ring-indigo-500/20";
+                      "border-indigo-505 dark:border-indigo-600 bg-indigo-500/10 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm ring-2 ring-indigo-500/20";
                   }
                 }
 
@@ -578,9 +578,9 @@ export default function QuizView({
                     id={`option-${currentQuestion.number}-${idx}`}
                     key={idx}
                     onClick={() => handleSelectOption(idx)}
-                    className={`w-full text-left p-3.5 border rounded-2xl text-xs leading-relaxed transition-all cursor-pointer flex items-start gap-2 ${optionStyleClass}`}
+                    className={`w-full text-left p-3.5 border rounded-2xl text-[13px] leading-relaxed transition-all cursor-pointer flex items-start gap-3 ${optionStyleClass}`}
                   >
-                    <span className="w-5 h-5 rounded-full border border-slate-205 dark:border-zinc-700 shrink-0 flex items-center justify-center font-bold text-[9px] bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 font-mono">
+                    <span className="w-5 h-5 rounded-full border border-slate-200 dark:border-zinc-750 shrink-0 flex items-center justify-center font-bold text-[10px] bg-slate-50 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 font-mono">
                       {idx + 1}
                     </span>
                     <span className="flex-1 mt-0.5">{option}</span>
@@ -641,15 +641,15 @@ export default function QuizView({
             {practiceMode === "study" && answers[currentQuestion.number] !== undefined && (
               <div
                 id="instant-explanation-accordion"
-                className="bg-slate-50 dark:bg-[#18181b] border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs animate-slide-up"
+                className="bg-indigo-50/50 dark:bg-zinc-900/40 border border-indigo-100 dark:border-zinc-800 rounded-3xl p-5 shadow-xs animate-slide-up"
               >
-                <div id="solution-header" className="flex items-center gap-1.5 mb-2 border-b border-gray-100 dark:border-zinc-800 pb-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                  <span className="font-extrabold text-xs text-slate-900 dark:text-zinc-150 uppercase tracking-wide">
-                    Hints & Solution
+                <div id="solution-header" className="flex items-center gap-1.5 mb-2.5 border-b border-indigo-100 dark:border-zinc-800/80 pb-2.5">
+                  <Sparkles className="w-4 h-4 text-indigo-500" />
+                  <span className="font-extrabold text-xs text-indigo-950 dark:text-zinc-100 uppercase tracking-widest leading-relaxed">
+                    Hints & Solutions
                   </span>
                 </div>
-                <p className="text-xs text-slate-650 dark:text-zinc-305 leading-relaxed font-mono whitespace-pre-wrap">
+                <p className="text-sm text-slate-800 dark:text-zinc-205 leading-relaxed font-sans font-medium whitespace-pre-wrap">
                   {currentQuestion.solution || "No explicit explanation steps are matched to this worksheet."}
                 </p>
               </div>

@@ -221,11 +221,11 @@ function conformToTestSchema(obj: any, logs: string[]): { success: boolean; data
     } else if (typeof rawCorrect === "string") {
       const parsedVal = rawCorrect.trim().toUpperCase();
       
-      // Checking letter patterns (A=0, B=1, etc.)
-      if (parsedVal === "A" || parsedVal === "1") correctIdx = 0;
-      else if (parsedVal === "B" || parsedVal === "2") correctIdx = 1;
-      else if (parsedVal === "C" || parsedVal === "3") correctIdx = 2;
-      else if (parsedVal === "D" || parsedVal === "4") correctIdx = 3;
+      // Checking letter patterns or exact 0-based option strings
+      if (parsedVal === "0" || parsedVal === "A") correctIdx = 0;
+      else if (parsedVal === "1" || parsedVal === "B") correctIdx = 1;
+      else if (parsedVal === "2" || parsedVal === "C") correctIdx = 2;
+      else if (parsedVal === "3" || parsedVal === "D") correctIdx = 3;
       else {
         // Option text match fallback:
         // What if correctOption is the matching text of the correct option string?
@@ -234,11 +234,10 @@ function conformToTestSchema(obj: any, logs: string[]): { success: boolean; data
           correctIdx = matchIdx;
           logs.push(`- Q.${qNum}: Matched correct key string "${parsedVal}" to option index ${matchIdx}.`);
         } else {
-          // Attempt integer parsing
+          // Attempt integer parsing as direct 0-based option index
           const num = parseInt(parsedVal, 10);
           if (!isNaN(num)) {
-            // Check if 1-indexed can be converted to 0-indexed
-            correctIdx = num > 0 ? (num - 1) % qOptions.length : 0;
+            correctIdx = Math.max(0, Math.min(num, qOptions.length - 1));
           } else {
             correctIdx = 0;
           }
