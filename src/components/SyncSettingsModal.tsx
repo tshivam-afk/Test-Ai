@@ -1,29 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
-  Cloud,
-  CloudOff,
-  LogOut,
-  Trash2,
-  Loader2,
-  ShieldAlert,
+  X,
+  Download,
+  Upload,
+  Database,
   CheckCircle,
   AlertCircle,
-  X,
-  Database,
-  CloudLightning,
+  Trash2,
+  FileText,
+  ShieldAlert,
+  Info
 } from "lucide-react";
-import { User } from "firebase/auth";
-import {
-  auth,
-  loginWithEmail,
-  registerWithEmail,
-  logout,
-  deleteAllCloudData,
-  fetchUserData,
-  saveWorkbookToCloud,
-  saveProgressToCloud,
-  saveHistoryToCloud,
-} from "../lib/firebase";
 import { Test, TestProgress, ExamHistoryItem } from "../types";
 
 interface SyncSettingsModalProps {
@@ -36,8 +23,9 @@ interface SyncSettingsModalProps {
     progress: Record<string, TestProgress>;
     history: ExamHistoryItem[];
   }) => void;
-  syncEnabled: boolean;
-  onToggleSync: (enabled: boolean) => void;
+  // Unused properties can be accepted and ignored gracefully to keep parent compatibility
+  syncEnabled?: boolean;
+  onToggleSync?: (enabled: boolean) => void;
 }
 
 export default function SyncSettingsModal({
@@ -46,247 +34,198 @@ export default function SyncSettingsModal({
   progress,
   examHistory,
   onImportCloudData,
-  syncEnabled,
-  onToggleSync,
 }: SyncSettingsModalProps) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [syncLoading, setSyncLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [showTroubleshoot, setShowTroubleshoot] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showWipeConfirm, setShowWipeConfirm] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  // Email/Password authenticating states
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
+  // Read-in backup state
+  const [parsedBackup, setParsedBackup] = useState<{
+    workbooks: Test[];
+    progress: Record<string, TestProgress>;
+    history: ExamHistoryItem[];
+  } | null>(null);
+  const [parsedFilename, setParsedFilename] = useState<string | null>(null);
 
-  const currentHost = typeof window !== "undefined" ? window.location.hostname : "your-app-domain.run.app";
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Monitor Auth Changes
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user);
-      setAuthLoading(false);
-    });
-    return () => unsub();
-  }, []);
-
-  const handleEmailAction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      setSyncMessage({ text: "Please fill in all blanks.", type: "error" });
-      return;
-    }
-    if (authMode === "register" && !displayName) {
-      setSyncMessage({ text: "Please specify a Display Name.", type: "error" });
-      return;
-    }
-
+  // 1. Export current local state to JSON
+  const handleExportBackup = () => {
     try {
-      setActionLoading(true);
-      setSyncMessage(null);
+      setSuccessMsg(null);
+      setErrorMsg(null);
 
-      let res;
-      if (authMode === "login") {
-        res = await loginWithEmail(email, password);
-        setSyncMessage({ text: `Logged in successfully as ${res.user.displayName || res.user.email}!`, type: "success" });
-      } else {
-        res = await registerWithEmail(email, password, displayName);
-        setSyncMessage({ text: "Success! Your new NEET Sync account is created and logged in.", type: "success" });
-      }
+      // Extract custom created tests (non-sample) and all other items
+      // To guarantee a complete portability, we backup everything (both custom and sample state)
+      const dataToBackup = {
+        app: "NEET PREP COMPANION",
+        version: "1.0.0",
+        backupTimestamp: new Date().toISOString(),
+        workbooks: tests,
+        progress,
+        history: examHistory,
+      };
 
-      if (res.user) {
-        // Clear inputs on success
-        setEmail("");
-        setPassword("");
-        setDisplayName("");
-        await handlePullAndMergeCloud(res.user.uid);
-      }
-    } catch (e: any) {
-      console.error(e);
-      let errMsg = e.message || "An authenticating error occurred.";
-      if (e.code === "auth/invalid-credential" || e.code === "auth/wrong-password") {
-        errMsg = "Incorrect password or email. Please verify and try again.";
-      } else if (e.code === "auth/user-not-found") {
-        errMsg = "No account exists under this email address. Try Registering!";
-      } else if (e.code === "auth/email-already-in-use") {
-        errMsg = "An account under this email already exists. Please Sign In!";
-      } else if (e.code === "auth/weak-password") {
-        errMsg = "Password should be at least 6 characters long.";
-      } else if (e.code === "auth/invalid-email") {
-        errMsg = "Please provide a valid email format.";
-      } else if (e.code === "auth/operation-not-allowed") {
-        errMsg = "Email/Password sign-in has not been enabled in your Firebase Console projects yet. Follow the steps below to enable it.";
-      }
-      setSyncMessage({ text: errMsg, type: "error" });
-    } finally {
-      setActionLoading(false);
+      const jsonStr = JSON.stringify(dataToBackup, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      const dateStr = new Date().toISOString().split("T")[0];
+      const timeStr = new Date().toTimeString().split(" ")[0].replace(/:/g, "-");
+      
+      a.href = url;
+      a.download = `neet_prep_workspace_backup_${dateStr}_${timeStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setSuccessMsg("Backup downloaded successfully! Store it safely or send it to another browser.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Failed to generate backup JSON file.");
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      setAuthLoading(true);
-      await logout();
-      setCurrentUser(null);
-      setSyncMessage({ text: "Logged out of NEET Sync.", type: "info" });
-    } catch (e: any) {
-      console.error(e);
-      setSyncMessage({ text: "Failed to logout.", type: "error" });
-    } finally {
-      setAuthLoading(false);
-    }
-  };
+  // 2. Parse uploaded JSON backup
+  const handleFileParse = (file: File) => {
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    setParsedBackup(null);
+    setParsedFilename(null);
 
-  const handlePullAndMergeCloud = async (userId: string) => {
-    try {
-      setSyncLoading(true);
-      const cloudData = await fetchUserData(userId);
-      if (cloudData) {
-        const { workbooks, progress: cloudProgress, history: cloudHistory } = cloudData;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = JSON.parse(text);
 
-        // Run client-side merging logic: preserve local custom items, populate missing, upload uniquely local
-        const mergedTests = [...tests];
-        let testsAddedFromCloudCount = 0;
-        let testsUploadedToCloudCount = 0;
-
-        // 1. Upload unique local custom tests (non-sample) that are missing in cloud
-        for (const localTest of tests) {
-          if (localTest.isSample) continue;
-          const foundInCloud = workbooks.some((ct) => ct.id === localTest.id);
-          if (!foundInCloud && syncEnabled) {
-            await saveWorkbookToCloud(userId, localTest);
-            testsUploadedToCloudCount++;
-          }
+        // Validation checks
+        if (!parsed || (typeof parsed !== "object")) {
+          throw new Error("Invalid format. File is not a valid JSON structure.");
         }
 
-        // 2. Add cloud tests to local state if missing
-        for (const cloudTest of workbooks) {
-          const foundLocally = tests.some((lt) => lt.id === cloudTest.id);
-          if (!foundLocally) {
-            mergedTests.push(cloudTest);
-            testsAddedFromCloudCount++;
-          }
+        const importedWorkbooks = Array.isArray(parsed.workbooks) ? parsed.workbooks : [];
+        const importedProgress = parsed.progress && typeof parsed.progress === "object" ? parsed.progress : {};
+        const importedHistory = Array.isArray(parsed.history) ? parsed.history : [];
+
+        if (importedWorkbooks.length === 0 && Object.keys(importedProgress).length === 0 && importedHistory.length === 0) {
+          throw new Error("The selected backup file is empty and contains no workspace states.");
         }
 
-        // 3. Merge progress maps (latest update date takes priority)
-        const mergedProgress = { ...progress };
-        for (const [tId, cloudProg] of Object.entries(cloudProgress)) {
-          const localProg = progress[tId];
-          const cloudDate = cloudProg.lastUpdatedAt ? new Date(cloudProg.lastUpdatedAt).getTime() : 0;
-          const localDate = localProg?.lastUpdatedAt ? new Date(localProg.lastUpdatedAt).getTime() : 0;
-
-          if (!localProg || cloudDate > localDate) {
-            mergedProgress[tId] = cloudProg;
-          } else if (localProg && localDate > cloudDate && syncEnabled) {
-            await saveProgressToCloud(userId, localProg);
-          }
-        }
-
-        // If a local progress is missing in cloud, sync it
-        if (syncEnabled) {
-          for (const [tId, localProg] of Object.entries(progress)) {
-            if (!cloudProgress[tId]) {
-              await saveProgressToCloud(userId, localProg);
-            }
-          }
-        }
-
-        // 4. Merge historic attempts list (merge unique entries by id)
-        const mergedHistory = [...examHistory];
-        for (const ch of cloudHistory) {
-          const existsLocally = examHistory.some((lh) => lh.id === ch.id);
-          if (!existsLocally) {
-            mergedHistory.push(ch);
-          }
-        }
-
-        if (syncEnabled) {
-          for (const lh of examHistory) {
-            const existsInCloud = cloudHistory.some((ch) => ch.id === lh.id);
-            if (!existsInCloud) {
-              await saveHistoryToCloud(userId, lh);
-            }
-          }
-        }
-
-        onImportCloudData({
-          workbooks: mergedTests,
-          progress: mergedProgress,
-          history: mergedHistory,
+        setParsedBackup({
+          workbooks: importedWorkbooks,
+          progress: importedProgress,
+          history: importedHistory,
         });
-
-        let feedbackText = "Synchronisation complete.";
-        if (testsAddedFromCloudCount > 0 || testsUploadedToCloudCount > 0) {
-          feedbackText += ` Synced ${testsAddedFromCloudCount} workbooks from cloud and uploaded ${testsUploadedToCloudCount} workbooks.`;
-        }
-        setSyncMessage({ text: feedbackText, type: "success" });
+        setParsedFilename(file.name);
+      } catch (err: any) {
+        console.error(err);
+        setErrorMsg(err.message || "Invalid or corrupt backup JSON file.");
       }
-    } catch (e: any) {
-      console.error(e);
-      setSyncMessage({ text: "Error pulling or merging cloud synchronization snapshots.", type: "error" });
-    } finally {
-      setSyncLoading(false);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileParse(e.target.files[0]);
     }
   };
 
-  const handleManualSyncPush = async () => {
-    if (!currentUser) return;
-    try {
-      setSyncLoading(true);
-      setSyncMessage(null);
-      // Sync custom workbooks
-      for (const t of tests) {
-        if (!t.isSample) {
-          await saveWorkbookToCloud(currentUser.uid, t);
-        }
-      }
-      // Sync progress
-      for (const p of Object.values(progress)) {
-        await saveProgressToCloud(currentUser.uid, p);
-      }
-      // Sync history
-      for (const h of examHistory) {
-        await saveHistoryToCloud(currentUser.uid, h);
-      }
-      setSyncMessage({ text: "All local test data successfully pushed to cloud!", type: "success" });
-    } catch (e: any) {
-      console.error(e);
-      setSyncMessage({ text: "Failed manual sync push.", type: "error" });
-    } finally {
-      setSyncLoading(false);
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
     }
   };
 
-  const handleDeleteCloudData = async () => {
-    if (!currentUser) return;
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileParse(e.dataTransfer.files[0]);
+    }
+  };
+
+  // 3. Keep current data, merge in new data (intelligent merge)
+  const executeMergeImport = () => {
+    if (!parsedBackup) return;
+
     try {
-      setDeleteLoading(true);
-      setSyncMessage(null);
-      await deleteAllCloudData(currentUser.uid);
-      setConfirmDelete(false);
-      setSyncMessage({
-        text: "Permanently deleted all your exam analysis and workbook files from the cloud database successfully.",
-        type: "success",
+      // Merge custom tests by ID (incoming overrides existing if duplicate, otherwise Appends)
+      const mergedTestsMap = new Map<string, Test>();
+      tests.forEach((t) => mergedTestsMap.set(t.id, t));
+      parsedBackup.workbooks.forEach((t) => mergedTestsMap.set(t.id, t));
+      const mergedTests = Array.from(mergedTestsMap.values());
+
+      // Merge progress metrics
+      const mergedProgress = { ...progress, ...parsedBackup.progress };
+
+      // Merge history items by unique ID
+      const mergedHistoryMap = new Map<string, ExamHistoryItem>();
+      examHistory.forEach((item) => mergedHistoryMap.set(item.id, item));
+      parsedBackup.history.forEach((item) => mergedHistoryMap.set(item.id, item));
+      const mergedHistory = Array.from(mergedHistoryMap.values());
+
+      // Trigger state push back to the parent app state
+      onImportCloudData({
+        workbooks: mergedTests,
+        progress: mergedProgress,
+        history: mergedHistory,
       });
-    } catch (e: any) {
-      console.error(e);
-      setSyncMessage({ text: "Erase database action failed.", type: "error" });
-    } finally {
-      setDeleteLoading(false);
+
+      setSuccessMsg(`Merged backup successfully! Added/Updated ${parsedBackup.workbooks.length} workbooks, progress states, and logs.`);
+      setParsedBackup(null);
+      setParsedFilename(null);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Failed to complete data merging.");
     }
   };
 
-  // Trigger sync on open if authenticated
-  useEffect(() => {
-    if (currentUser && !syncLoading && !authLoading) {
-      handlePullAndMergeCloud(currentUser.uid);
+  // 4. Overwrite everything
+  const executeOverwriteImport = () => {
+    if (!parsedBackup) return;
+
+    try {
+      onImportCloudData({
+        workbooks: parsedBackup.workbooks,
+        progress: parsedBackup.progress,
+        history: parsedBackup.history,
+      });
+
+      setSuccessMsg(`Restored fresh backup! Overwrote existing local space with ${parsedBackup.workbooks.length} workbooks.`);
+      setParsedBackup(null);
+      setParsedFilename(null);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Failed to complete backup restoration.");
     }
-  }, [currentUser]);
+  };
+
+  // 5. Hard Reset/Wipe database
+  const executeLocalWipe = () => {
+    try {
+      // Call with default sample states
+      onImportCloudData({
+        workbooks: [], // This forces App to load default blank or sample files on next bootstrap or clean refresh
+        progress: {},
+        history: [],
+      });
+      setShowWipeConfirm(false);
+      setSuccessMsg("Local workspace data successfully wiped! App is reverted to default sample templates.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Reset action failed.");
+    }
+  };
 
   return (
     <div
@@ -300,9 +239,9 @@ export default function SyncSettingsModal({
         {/* Modal Header */}
         <div id="sync-settings-header" className="px-5 py-4.5 border-b border-slate-100 dark:border-zinc-900 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cloud className="w-5 h-5 text-indigo-500 shrink-0" />
+            <Database className="w-5 h-5 text-indigo-505 shrink-0" />
             <span className="font-extrabold text-sm tracking-tight text-slate-900 dark:text-zinc-100">
-              Cloud Synchronization Workspace
+              Workspace Backup & Portability
             </span>
           </div>
           <button
@@ -316,330 +255,221 @@ export default function SyncSettingsModal({
 
         {/* Modal Main Body */}
         <div id="sync-settings-body" className="p-5 flex-1 overflow-y-auto space-y-4 custom-scrollbar max-h-[80vh]">
-          {syncMessage && (
-            <div
-              id="sync-status-notification"
-              className={`p-3.5 rounded-2xl flex items-start gap-2.5 text-xs font-medium leading-relaxed ${
-                syncMessage.type === "success"
-                  ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border border-emerald-100/30 dark:border-emerald-900/30"
-                  : syncMessage.type === "error"
-                  ? "bg-rose-50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-400 border border-rose-100/30 dark:border-rose-900/30"
-                  : "bg-indigo-50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-400 border border-indigo-100/30 dark:border-indigo-950/30"
-              }`}
-            >
-              {syncMessage.type === "success" ? (
-                <CheckCircle className="w-4.5 h-4.5 shrink-0 text-emerald-500" />
-              ) : syncMessage.type === "error" ? (
-                <AlertCircle className="w-4.5 h-4.5 shrink-0 text-rose-500" />
-              ) : (
-                <CloudLightning className="w-4.5 h-4.5 shrink-0 text-indigo-500 animate-pulse" />
-              )}
-              <span className="flex-1">{syncMessage.text}</span>
-            </div>
-          )}
-
-          {syncMessage?.text?.includes("enabled") && (
-            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded-2xl p-4 text-xs space-y-2 text-amber-900 dark:text-amber-300 animate-slide-up">
-              <h5 className="font-extrabold flex items-center gap-1.5 uppercase text-[11px] tracking-wider text-amber-800 dark:text-amber-400">
-                <ShieldAlert className="w-4 h-4 text-amber-500" />
-                Easy 2-Click Setup Required
-              </h5>
-              <p className="text-[11px] leading-relaxed text-slate-600 dark:text-zinc-400">
-                Firebase projects have Email login turned off by default. To enable it:
+          {/* Info intro banner */}
+          <div className="bg-slate-50 dark:bg-zinc-900/60 p-4 rounded-2xl border border-slate-100 dark:border-zinc-850 flex gap-3 text-xs text-slate-600 dark:text-zinc-400">
+            <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-extrabold text-slate-800 dark:text-zinc-200">No Sign-in or Internet Required!</p>
+              <p className="leading-relaxed text-[11px] text-slate-500 dark:text-zinc-500">
+                Instantly backup mock worksheets, notes, OMR answers, and full performance analysis logs directly. Perfect for transferring worksheets or saving your streak progress safely offline.
               </p>
-              <ol className="list-decimal list-inside space-y-1.5 text-[11.5px] leading-relaxed">
-                <li>
-                  Open your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="underline font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-550 transition-colors">Firebase Console</a>.
-                </li>
-                <li>
-                  Go to <strong>Authentication</strong> &gt; <strong>Sign-in method</strong> tab.
-                </li>
-                <li>
-                  Click <strong>Add new provider</strong> (or edit "Email/Password" if listed).
-                </li>
-                <li>
-                  Select <strong>Email/Password</strong>, set it to <strong>Enable</strong>, and click <strong>Save</strong>.
-                </li>
-              </ol>
+            </div>
+          </div>
+
+          {/* Messages */}
+          {successMsg && (
+            <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/25 border border-emerald-100 dark:border-emerald-900/40 text-emerald-800 dark:text-emerald-400 rounded-2xl flex items-start gap-2 text-xs">
+              <CheckCircle className="w-4.5 h-4.5 shrink-0 text-emerald-500 mt-0.5" />
+              <span className="leading-relaxed">{successMsg}</span>
             </div>
           )}
 
-          {authLoading ? (
-            <div id="auth-connecting-state" className="flex flex-col items-center justify-center py-10 space-y-2">
-              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
-              <p className="text-xs text-slate-400 dark:text-zinc-500">Connecting to secure account systems...</p>
-            </div>
-          ) : !currentUser ? (
-            /* Tabbed Email/Password Register-Login flows */
-            <div id="auth-credential-section" className="space-y-4 text-left">
-              <div className="mx-auto w-12 h-12 bg-indigo-50 dark:bg-indigo-950/30 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-900/50 flex items-center justify-center mb-2">
-                <CloudLightning className="w-6 h-6 text-indigo-500 animate-pulse" />
-              </div>
-              <div className="text-center">
-                <h4 className="font-extrabold text-sm text-slate-850 dark:text-zinc-150">Cloud Synchronization System</h4>
-                <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
-                  Avoid browser popup limits and save your full study worksheets and timers safely across any browser or device.
-                </p>
-              </div>
-
-              {/* Selector Tabs for Login vs Register */}
-              <div className="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-zinc-900/60 p-1 rounded-2xl border border-slate-100 dark:border-zinc-800/80 mt-4 select-none">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("login");
-                    setSyncMessage(null);
-                  }}
-                  className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                    authMode === "login"
-                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                      : "text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-350 cursor-pointer"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode("register");
-                    setSyncMessage(null);
-                  }}
-                  className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                    authMode === "register"
-                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                      : "text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-350 cursor-pointer"
-                  }`}
-                >
-                  Create Account
-                </button>
-              </div>
-
-              {/* Input Forms */}
-              <form onSubmit={handleEmailAction} className="space-y-3 mt-3 animate-fade-in">
-                {authMode === "register" && (
-                  <div>
-                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
-                      Your Full Name
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Ramesh Kumar"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="w-full py-2.5 mt-2 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl font-extrabold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {actionLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : authMode === "login" ? (
-                    "Authorize & Sign In"
-                  ) : (
-                    "Register & Enable Sync"
-                  )}
-                </button>
-              </form>
-
-              {/* Direct email guidance summary footer note */}
-              <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-850/80 rounded-2xl p-3.5 mt-2 space-y-1 text-slate-500 dark:text-zinc-450">
-                <p className="font-extrabold text-slate-700 dark:text-zinc-300 text-[10px] uppercase tracking-wider flex items-center gap-1">
-                  <Database className="w-3.5 h-3.5 text-indigo-500" />
-                  No Browser Popups Needed
-                </p>
-                <p className="text-[10.5px] leading-relaxed">
-                  Because this uses native credentials directly, it is immune to iframe blockages, cookies restriction, or popups policy blockers. Your passwords/emails are encrypted safely by Google Firebase authentication.
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* Logged in configurations detail workspace */
-            <div id="auth-logged-in-section" className="space-y-4">
-              <div className="bg-slate-50 dark:bg-zinc-900/60 rounded-2xl p-3 border border-slate-200/50 dark:border-zinc-800/50 flex items-center justify-between select-none">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center font-bold text-xs">
-                    {currentUser.displayName ? currentUser.displayName.slice(0, 2).toUpperCase() : "US"}
-                  </div>
-                  <div className="text-left">
-                    <p className="font-extrabold text-xs text-slate-800 dark:text-zinc-200">
-                      {currentUser.displayName || "NEET Student"}
-                    </p>
-                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 font-mono">
-                      {currentUser.email}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  id="google-signout-action"
-                  onClick={handleLogout}
-                  className="p-2 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-100 dark:border-zinc-800 text-slate-500 hover:text-slate-800 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-xl transition-all cursor-pointer"
-                  title="Disconnect user session"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Real-time synchronization activation state settings toggler */}
-              <div className="bg-white dark:bg-zinc-905 rounded-2xl p-4 border border-slate-200 dark:border-zinc-805 space-y-3">
-                <div className="flex items-center justify-between select-none">
-                  <div>
-                    <h5 className="font-extrabold text-xs text-slate-800 dark:text-zinc-200 flex items-center gap-1.5">
-                      <Cloud className={`w-4 h-4 ${syncEnabled ? "text-emerald-500 animate-pulse" : "text-slate-400"}`} />
-                      Real-time Cloud Sync
-                    </h5>
-                    <p className="text-[10px] text-slate-450 dark:text-zinc-500 mt-0.5">
-                      Auto-sync local changes and custom tests.
-                    </p>
-                  </div>
-                  <button
-                    id="sync-toggle-action"
-                    onClick={() => onToggleSync(!syncEnabled)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      syncEnabled ? "bg-indigo-600" : "bg-slate-200 dark:bg-zinc-800"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        syncEnabled ? "translate-x-4" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {/* Database Metrics indicators */}
-                <div className="pt-2 border-t border-slate-100 dark:border-zinc-900 grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 bg-slate-50 dark:bg-zinc-900 rounded-xl">
-                    <p className="text-[10px] text-slate-400">Workbooks</p>
-                    <p className="font-black text-xs text-slate-800 dark:text-zinc-200 mt-0.5">
-                      {tests.filter((t) => !t.isSample).length}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-slate-50 dark:bg-zinc-900 rounded-xl">
-                    <p className="text-[10px] text-slate-400">Progess Maps</p>
-                    <p className="font-black text-xs text-slate-800 dark:text-zinc-200 mt-0.5">
-                      {Object.keys(progress).length}
-                    </p>
-                  </div>
-                  <div className="p-2 bg-slate-50 dark:bg-zinc-900 rounded-xl">
-                    <p className="text-[10px] text-slate-400">Exam Logs</p>
-                    <p className="font-black text-xs text-slate-800 dark:text-zinc-200 mt-0.5">
-                      {examHistory.length}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-2 pt-1">
-                  <button
-                    id="cloud-pulse-sync-action"
-                    onClick={() => handlePullAndMergeCloud(currentUser.uid)}
-                    disabled={syncLoading}
-                    className="flex-1 py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-xl transition-all cursor-pointer font-bold text-[10px] flex items-center justify-center gap-1.5 select-none"
-                  >
-                    {syncLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Cloud className="w-3.5 h-3.5" />}
-                    Pull & Merge Cloud
-                  </button>
-                  <button
-                    id="cloud-push-sync-action"
-                    onClick={handleManualSyncPush}
-                    disabled={syncLoading}
-                    className="flex-1 py-1.5 px-3 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-100 dark:border-zinc-805 text-slate-600 dark:text-zinc-400 rounded-xl transition-all cursor-pointer font-bold text-[10px] flex items-center justify-center gap-1.5 select-none"
-                  >
-                    {syncLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-                    Push Data to Cloud
-                  </button>
-                </div>
-              </div>
-
-              {/* Danger Management Area: Storage erasure & suspension controls */}
-              <div className="p-4 rounded-2xl border border-rose-200/50 dark:border-rose-950/30 bg-rose-50/20 dark:bg-rose-950/10 space-y-3">
-                <div>
-                  <h6 className="font-extrabold text-xs text-rose-850 dark:text-rose-450 flex items-center gap-1.5 select-none">
-                    <ShieldAlert className="w-4 h-4 text-rose-500" />
-                    Danger Zone & Cloud Controls
-                  </h6>
-                  <p className="text-[10px] text-slate-450 dark:text-rose-400/80 mt-0.5 leading-normal">
-                    Turn off automatic background triggers or wipe your sync state data files completely from the cloud servers.
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  {!confirmDelete ? (
-                    <button
-                      id="request-erase-cloud-data-btn"
-                      onClick={() => setConfirmDelete(true)}
-                      className="w-full py-2.5 bg-rose-50 hover:bg-rose-105 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-650 dark:text-rose-400 rounded-xl transition-all font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Wipe Data from Cloud Database
-                    </button>
-                  ) : (
-                    <div className="space-y-2 animate-pulse bg-white dark:bg-[#121214] border border-rose-200 dark:border-rose-950 p-3 rounded-xl">
-                      <p className="text-[10px] font-bold text-slate-800 dark:text-zinc-200">
-                        Confirm Database Wipe? This deletes all workbooks and exam logs on cloud storage forever.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <button
-                          id="confirm-erase-cloud-data-btn"
-                          onClick={handleDeleteCloudData}
-                          disabled={deleteLoading}
-                          className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold text-[10px] transition-all cursor-pointer"
-                        >
-                          {deleteLoading ? "Erasing..." : "Yes, Erase Cloud Storage"}
-                        </button>
-                        <button
-                          id="cancel-erase-cloud-data-btn"
-                          onClick={() => setConfirmDelete(false)}
-                          className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-lg font-bold text-[10px] transition-all cursor-pointer"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+          {errorMsg && (
+            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/25 border border-rose-100/50 dark:border-rose-900/40 text-rose-800 dark:text-rose-400 rounded-2xl flex items-start gap-2 text-xs">
+              <AlertCircle className="w-4.5 h-4.5 shrink-0 text-rose-500 mt-0.5" />
+              <span className="leading-relaxed">{errorMsg}</span>
             </div>
           )}
+
+          {/* Current Workspace Stats */}
+          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="p-2.5 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-slate-100/50 dark:border-zinc-850">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide">Workbooks</p>
+              <p className="font-black text-sm text-slate-800 dark:text-zinc-100 mt-0.5">
+                {tests.length}
+              </p>
+            </div>
+            <div className="p-2.5 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-slate-100/50 dark:border-zinc-850">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide">Progress</p>
+              <p className="font-black text-sm text-slate-800 dark:text-zinc-100 mt-0.5">
+                {Object.keys(progress).length}
+              </p>
+            </div>
+            <div className="p-2.5 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-slate-100/50 dark:border-zinc-850">
+              <p className="text-[10px] text-slate-400 uppercase tracking-wide">Exam Logs</p>
+              <p className="font-black text-sm text-slate-800 dark:text-zinc-100 mt-0.5">
+                {examHistory.length}
+              </p>
+            </div>
+          </div>
+
+          {/* Export Action Card */}
+          <div className="bg-white dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800 rounded-2xl p-4 space-y-3">
+            <div>
+              <h4 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200 uppercase tracking-wider">
+                1. Save Backup Archive
+              </h4>
+              <p className="text-[11px] text-slate-450 dark:text-zinc-500 mt-0.5">
+                Export and download all current MCQ mock workbooks & studies to a backup file.
+              </p>
+            </div>
+
+            <button
+              onClick={handleExportBackup}
+              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              Download Local Backup (.json)
+            </button>
+          </div>
+
+          {/* Import Action Card */}
+          <div className="bg-white dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800 rounded-2xl p-4 space-y-3">
+            <div>
+              <h4 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200 uppercase tracking-wider">
+                2. Restore / Import Archive
+              </h4>
+              <p className="text-[11px] text-slate-450 dark:text-zinc-500 mt-0.5">
+                Load a previously exported '.json' backup file to restore custom NEET material.
+              </p>
+            </div>
+
+            {/* Drag & Drop Upload Zone */}
+            {!parsedBackup ? (
+              <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                  dragActive
+                    ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20"
+                    : "border-slate-200 dark:border-zinc-800 hover:border-slate-350 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-950/20"
+                }`}
+              >
+                <input
+                  type="file"
+                  accept=".json"
+                  ref={fileInputRef}
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+                <Upload className="w-6 h-6 text-indigo-500" />
+                <div className="text-xs text-slate-650 dark:text-zinc-350">
+                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline">
+                    Click to browse
+                  </span>{" "}
+                  or drag backup file here
+                </div>
+                <p className="text-[10px] text-slate-400">JSON format archives only</p>
+              </div>
+            ) : (
+              /* Backup File Details & Action Confirmation */
+              <div className="bg-indigo-50/30 dark:bg-indigo-950/20 border border-indigo-200/40 dark:border-indigo-900/30 rounded-2xl p-4 space-y-3.5 animate-slide-up">
+                <div className="flex items-center gap-2 text-xs border-b border-indigo-100/50 dark:border-indigo-900/30 pb-2">
+                  <FileText className="w-4.5 h-4.5 text-indigo-500 shrink-0" />
+                  <span className="font-extrabold text-slate-800 dark:text-zinc-200 max-w-[200px] truncate select-all" title={parsedFilename || ""}>
+                    {parsedFilename}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-slate-600 dark:text-zinc-450">
+                  <div>
+                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                      {parsedBackup.workbooks.length}
+                    </span>
+                    Workbooks
+                  </div>
+                  <div>
+                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                      {Object.keys(parsedBackup.progress).length}
+                    </span>
+                    Progress Maps
+                  </div>
+                  <div>
+                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                      {parsedBackup.history.length}
+                    </span>
+                    Exam Logs
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-1 font-sans">
+                  <button
+                    onClick={executeMergeImport}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer"
+                  >
+                    Merge with Current Data
+                  </button>
+                  <button
+                    onClick={executeOverwriteImport}
+                    className="w-full py-2 bg-rose-605 hover:bg-rose-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer"
+                  >
+                    Overwrite to Pure Backup (Replace All)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setParsedBackup(null);
+                      setParsedFilename(null);
+                    }}
+                    className="w-full py-1 text-[11px] font-semibold text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 cursor-pointer"
+                  >
+                    Cancel / Pick Another File
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Danger Zone */}
+          <div className="border border-rose-200/50 dark:border-rose-950/30 bg-rose-50/10 dark:bg-rose-950/10 rounded-2xl p-4 space-y-3">
+            <div>
+              <h5 className="text-xs font-extrabold text-rose-800 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 text-rose-500" />
+                Danger Zone
+              </h5>
+              <p className="text-[11px] text-slate-450 dark:text-rose-450 mt-0.5 leading-normal">
+                Wipe your local storage data entirely. This reverts everything back to default template presets.
+              </p>
+            </div>
+
+            {!showWipeConfirm ? (
+              <button
+                onClick={() => setShowWipeConfirm(true)}
+                className="w-full py-2 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/30 text-rose-650 dark:text-rose-405 border border-rose-100 dark:border-rose-900/40 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Wipe ALL Local Storage Data
+              </button>
+            ) : (
+              <div className="bg-white dark:bg-[#121214] border border-rose-200 dark:border-rose-950/80 p-3 rounded-2xl space-y-2.5 animate-pulse">
+                <p className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
+                  Are you absolutely sure? This permanently deletes all your study workbooks and historical log analytics!
+                </p>
+                <div className="flex items-center gap-2 font-sans">
+                  <button
+                    onClick={executeLocalWipe}
+                    className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs cursor-pointer"
+                  >
+                    Confirm Wipe
+                  </button>
+                  <button
+                    onClick={() => setShowWipeConfirm(false)}
+                    className="flex-1 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl font-bold text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Info Footer branding */}
         <div id="sync-settings-footer" className="p-4 bg-slate-50 dark:bg-zinc-900/60 border-t border-slate-100 dark:border-zinc-900 select-none text-center">
-          <p className="text-[9px] text-slate-400 dark:text-zinc-500 flex items-center justify-center gap-1">
-            <Database className="w-3 h-3" /> Secure sync architecture built on Google Firebase Firestore & Auth.
+          <p className="text-[10px] text-slate-400 dark:text-zinc-500 flex items-center justify-center gap-1">
+            <Database className="w-3 h-3" /> Fully Local Backup Utility • No cookies blocks or password leakage risk.
           </p>
         </div>
       </div>
