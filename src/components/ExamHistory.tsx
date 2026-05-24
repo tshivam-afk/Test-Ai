@@ -15,9 +15,12 @@ import {
   BookOpen,
   Info,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  TrendingUp,
+  Brain
 } from "lucide-react";
 import { ExamHistoryItem, TestProgress } from "../types";
+import DetailedHistoryReview from "./DetailedHistoryReview";
 
 interface ExamHistoryProps {
   historyItems: ExamHistoryItem[];
@@ -30,8 +33,8 @@ export default function ExamHistory({
   onDeleteHistoryItem,
   onRetest,
 }: ExamHistoryProps) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeReviewItem, setActiveReviewItem] = useState<ExamHistoryItem | null>(null);
 
   const filteredItems = useMemo(() => {
     return historyItems.filter((item) =>
@@ -57,42 +60,14 @@ export default function ExamHistory({
     return Math.round((totalCorrect / totalAttempted) * 100);
   }, [historyItems]);
 
-  // Remark generator based on NEET performance scoring percentile
-  const getSimulatedRemark = (score: {
-    correctCount: number;
-    incorrectCount: number;
-    blankCount: number;
-    finalScore: number;
-  }, totalQs: number) => {
-    const maxScore = totalQs * 4;
-    const percentage = maxScore > 0 ? (score.finalScore / maxScore) * 100 : 0;
-
-    if (percentage >= 85) {
-      return {
-        tag: "CRITICAL EXCELLENCE",
-        color: "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-        text: "Outstanding conceptual precision. Keep up this consistency to rank among the top NEET aspirants! Potential AIIMS contender.",
-      };
-    } else if (percentage >= 65) {
-      return {
-        tag: "COMPETITIVE STANDING",
-        color: "text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-        text: "Highly competitive performance. Target the specific wrong answers shown below in the Mistake Gym to secure a government medical seat.",
-      };
-    } else if (percentage >= 40) {
-      return {
-        tag: "CONCEPT STABILIZATION",
-        color: "text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20",
-        text: "A stable attempt. You have solid knowledge but are dropping heavy negative marks. Minimize blind guessing and verify solutions.",
-      };
-    } else {
-      return {
-        tag: "URGENT DRILLS REQUIRED",
-        color: "text-rose-600 dark:text-rose-400 bg-rose-500/10 border-rose-500/20",
-        text: "Requires intensive conceptual practice. Convert your wrong options into bookmarks and review high-yield chapters immediately.",
-      };
-    }
-  };
+  // Calculate overall average time spent per question across all attempts
+  const averagePace = useMemo(() => {
+    if (historyItems.length === 0) return 0;
+    const totalTimeSpent = historyItems.reduce((sum, item) => sum + item.timeSpent, 0);
+    const totalQsCount = historyItems.reduce((sum, item) => sum + item.questions.length, 0);
+    if (totalQsCount === 0) return 0;
+    return Math.round(totalTimeSpent / totalQsCount);
+  }, [historyItems]);
 
   const formatTimer = (sec: number) => {
     const mm = Math.floor(sec / 60);
@@ -101,7 +76,7 @@ export default function ExamHistory({
   };
 
   return (
-    <div id="exam-history-root" className="flex-1 flex flex-col p-4 overflow-y-auto custom-scrollbar space-y-4">
+    <div id="exam-history-root" className="flex-1 flex flex-col p-4 overflow-y-auto custom-scrollbar space-y-4 relative">
       {/* Title */}
       <div>
         <span className="text-[10px] font-extrabold tracking-widest text-[#ef4444] uppercase flex items-center gap-1">
@@ -112,34 +87,44 @@ export default function ExamHistory({
         </h2>
       </div>
 
-       {/* Stats Cards Dashboard */}
-      <div id="history-stats-dashboard" className="grid grid-cols-3 gap-2.5 select-none">
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
-          <History className="w-4 h-4 text-rose-500 mb-1" />
+       {/* Stats Cards Dashboard (redefined as 4-Column stats grid with Overall Pace) */}
+      <div id="history-stats-dashboard" className="grid grid-cols-4 gap-2 select-none">
+        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
+          <History className="w-3.5 h-3.5 text-rose-500 mb-1" />
           <div>
-            <span className="text-[9px] text-slate-400 font-bold block">Simulated</span>
-            <span className="font-extrabold text-lg text-slate-800 dark:text-zinc-100 leading-none">
+            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Simulated</span>
+            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
               {totalSimulated}
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
-          <Award className="w-4 h-4 text-amber-500 mb-1" />
+        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
+          <Award className="w-3.5 h-3.5 text-amber-500 mb-1" />
           <div>
-            <span className="text-[9px] text-slate-400 font-bold block">Best Mark</span>
-            <span className="font-extrabold text-lg text-slate-800 dark:text-zinc-100 leading-none">
+            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Best Mark</span>
+            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
               {bestScore > 0 ? `+${bestScore}` : bestScore}
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
-          <Sparkles className="w-4 h-4 text-emerald-500 mb-1" />
+        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
+          <Sparkles className="w-3.5 h-3.5 text-emerald-500 mb-1" />
           <div>
-            <span className="text-[9px] text-slate-400 font-bold block">Avg. Accu.</span>
-            <span className="font-extrabold text-lg text-slate-800 dark:text-zinc-100 leading-none">
+            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Avg. Accu.</span>
+            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
               {averageAccuracy}%
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
+          <Clock className="w-3.5 h-3.5 text-indigo-500 mb-1" />
+          <div>
+            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Avg. Pace</span>
+            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
+              {averagePace}s <span className="text-[8px] text-slate-450 font-normal">/Q</span>
             </span>
           </div>
         </div>
@@ -154,7 +139,7 @@ export default function ExamHistory({
             placeholder="Search completed exam papers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 bg-transparent text-xs text-slate-800 dark:text-zinc-200 placeholder-zinc-700 outline-none focus:outline-none font-medium"
+            className="flex-1 bg-transparent text-xs text-slate-800 dark:text-zinc-200 placeholder-zinc-750 outline-none focus:outline-none font-medium"
           />
         </div>
       </div>
@@ -173,38 +158,19 @@ export default function ExamHistory({
           </div>
         ) : (
           filteredItems.map((item) => {
-            const isExpanded = expandedId === item.id;
             const totalQs = item.questions.length;
             const maxScore = totalQs * 4;
-            const percentage = Math.round((item.score.finalScore / Math.max(1, maxScore)) * 100);
-            
-            const remark = getSimulatedRemark(item.score, totalQs);
-
-            // Separate wrongs and blank (unattempted)
-            const wrongQuestions = item.questions.filter((q) => {
-              const ansIdx = item.answers[q.number];
-              return ansIdx !== undefined && ansIdx !== q.correctOptionIndex;
-            });
-
-            const unattemptedQuestions = item.questions.filter((q) => {
-              return item.answers[q.number] === undefined;
-            });
+            const attemptPace = totalQs > 0 ? Math.round(item.timeSpent / totalQs) : 0;
 
             return (
               <div
                 key={item.id}
                 id={`history-[${item.id}]`}
-                 className={`p-4 bg-white dark:bg-[#121214] border rounded-2xl transition-all flex flex-col relative ${
-                  isExpanded
-                    ? "border-rose-400 ring-1 ring-rose-500/15 shadow-md"
-                    : "border-slate-100 dark:border-zinc-800/80 hover:border-slate-300 dark:hover:border-zinc-700"
-                }`}
+                onClick={() => setActiveReviewItem(item)}
+                className="p-4 bg-white dark:bg-[#121214] border border-slate-100 dark:border-zinc-800/80 hover:border-indigo-400 dark:hover:border-indigo-600 rounded-2xl transition-all flex flex-col relative group cursor-pointer shadow-xs hover:shadow-md"
               >
-                {/* Header overview - click to expand details */}
-                <div
-                  onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className="cursor-pointer space-y-2 select-none"
-                >
+                {/* Header overview */}
+                <div className="space-y-2 select-none">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 pr-4">
                       <span className="text-[8px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 flex items-center gap-1 max-w-[170px] truncate">
@@ -216,13 +182,13 @@ export default function ExamHistory({
                           minute: "2-digit",
                         })}
                       </span>
-                      <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
+                      <h4 className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {item.testTitle}
                       </h4>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-[9px] text-slate-400 block font-bold uppercase">Marks Collected</span>
+                      <span className="text-[8px] text-slate-400 block font-bold uppercase leading-tight">Total Marks</span>
                       <span className={`text-sm font-black tracking-tight ${item.score.finalScore > 0 ? "text-indigo-600 dark:text-indigo-400" : "text-amber-500"}`}>
                         {item.score.finalScore > 0 ? `+${item.score.finalScore}` : item.score.finalScore}
                       </span>
@@ -231,184 +197,58 @@ export default function ExamHistory({
                   </div>
 
                    {/* High level info pills list */}
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-dashed border-slate-100 dark:border-zinc-850">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         {item.score.correctCount} Correct
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 dark:text-rose-400">
-                        {item.score.incorrectCount} Wrong
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 dark:text-rose-400 font-semibold text-rose-500">
+                        {item.score.incorrectCount} Correct
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-zinc-400">
-                        {item.score.blankCount} Blank
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-zinc-400 font-semibold">
+                        {item.score.blankCount} Skip
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800 text-slate-400 dark:text-zinc-400 font-mono flex items-center gap-0.5">
-                        <Clock className="w-2.5 h-2.5" />
-                        {formatTimer(item.timeSpent)}
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-550 dark:text-indigo-400 flex items-center gap-0.5 font-mono">
+                        <Clock className="w-2.5 h-2.5 text-indigo-500" />
+                        {attemptPace}s/Q
                       </span>
                     </div>
-                    <div className="text-slate-400 dark:text-zinc-500">
-                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+
+                    <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold flex items-center gap-0.5 uppercase tracking-wider group-hover:translate-x-1 transition-transform">
+                      <span>Detailed diagnostics</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
                 </div>
 
-                {/* Expanded Detailed Report Panel */}
-                {isExpanded && (
-                  <div id={`history-expanded-${item.id}`} className="mt-4 pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-4">
-                    {/* Remarks Section */}
-                    <div className={`p-3 rounded-2xl border ${remark.color}`}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[9px] font-extrabold tracking-widest uppercase font-mono">
-                          📢 Clinician Remarks
-                        </span>
-                        <span className="text-[9px] font-extrabold tracking-widest uppercase px-1.5 py-0.5 rounded bg-white dark:bg-zinc-950 font-mono">
-                          {remark.tag}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-800 dark:text-zinc-200 leading-normal font-sans font-medium">
-                        {remark.text}
-                      </p>
-                    </div>
-
-                    {/* Mistakes Sub-panel (Questions went WRONG) */}
-                    <div>
-                      <h5 className="text-[10px] text-red-500 font-black tracking-widest uppercase font-mono mb-2 flex items-center gap-1">
-                        <XCircle className="w-3.5 h-3.5" /> Questions Went Wrong ({wrongQuestions.length})
-                      </h5>
-                      {wrongQuestions.length === 0 ? (
-                        <p className="text-[10px] text-slate-450 dark:text-zinc-500 italic py-1 pl-1 bg-emerald-500/5 rounded-lg border border-dashed border-emerald-500/10">
-                          🎯 Outstanding! Zero negative marks dropped.
-                        </p>
-                      ) : (
-                        <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                          {wrongQuestions.map((q) => {
-                            const userOptionIdx = item.answers[q.number];
-                            const correctOptionIdx = q.correctOptionIndex;
-                            return (
-                              <div
-                                key={q.number}
-                                className="p-3.5 bg-rose-500/5 dark:bg-rose-950/10 border border-red-500/10 rounded-2xl space-y-2 text-xs"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-extrabold text-[10px] text-slate-400 dark:text-transparent dark:bg-gradient-to-r dark:from-indigo-400 dark:to-teal-400 dark:bg-clip-text">
-                                    Q.{q.number}
-                                  </span>
-                                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 font-extrabold px-1.5 py-0.5 rounded-md">
-                                    {q.subject}
-                                  </span>
-                                </div>
-                                <p className="font-bold text-slate-800 dark:text-zinc-100 leading-relaxed">
-                                  {q.questionText}
-                                </p>
-                                <div className="space-y-1.5 pl-1 select-none">
-                                  <div className="text-[10px] text-slate-400 dark:text-zinc-400">
-                                    Your choice: <span className="font-bold text-rose-500 line-through pr-1">{q.options[userOptionIdx!] || "None"}</span>
-                                  </div>
-                                  <div className="text-[10px] text-slate-400 dark:text-zinc-400">
-                                    Correct: <span className="font-bold text-emerald-500">{q.options[correctOptionIdx]}</span>
-                                  </div>
-                                </div>
-                                {q.solution && (
-                                  <div className="mt-2.5 pt-2 border-t border-red-500/10">
-                                    <span className="text-[9px] text-indigo-500 font-black tracking-wider uppercase font-mono block mb-1">
-                                      Solution Blueprint
-                                    </span>
-                                    <p className="text-[11px] text-slate-500 dark:text-zinc-300 leading-normal whitespace-pre-wrap">
-                                      {q.solution}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Unattempted Sub-panel (Questions went UNATTEMPTED) */}
-                    <div>
-                      <h5 className="text-[10px] text-slate-500 font-black tracking-widest uppercase font-mono mb-2 flex items-center gap-1">
-                        <HelpCircle className="w-3.5 h-3.5 text-slate-400" /> Questions Left Unattempted ({unattemptedQuestions.length})
-                      </h5>
-                      {unattemptedQuestions.length === 0 ? (
-                        <p className="text-[10px] text-slate-450 dark:text-zinc-500 italic py-1 pl-1 bg-indigo-500/5 rounded-lg border border-dashed border-indigo-500/10">
-                          🎉 Complete Coverage! You answered all questions.
-                        </p>
-                      ) : (
-                        <div className="max-h-[220px] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
-                          {unattemptedQuestions.map((q) => {
-                            const correctOptionIdx = q.correctOptionIndex;
-                            return (
-                              <div
-                                key={q.number}
-                               className="p-3.5 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 rounded-2xl space-y-2 text-xs"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-extrabold text-[10px] text-slate-400">
-                                    Q.{q.number}
-                                  </span>
-                                  <span className="text-[10px] bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 font-extrabold px-1.5 py-0.5 rounded-md">
-                                    {q.subject}
-                                  </span>
-                                </div>
-                                <p className="font-bold text-slate-800 dark:text-zinc-100 leading-relaxed">
-                                  {q.questionText}
-                                </p>
-                                <div className="text-[10px] text-slate-400 dark:text-zinc-400 select-none pl-1">
-                                  Correct Answer: <span className="font-bold text-emerald-500">{q.options[correctOptionIdx]}</span>
-                                </div>
-                                {q.solution && (
-                                  <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-zinc-800">
-                                    <span className="text-[9px] text-indigo-500 font-black tracking-wider uppercase font-mono block mb-1">
-                                      Solution Blueprint
-                                    </span>
-                                    <p className="text-[11px] text-slate-500 dark:text-zinc-300 leading-normal whitespace-pre-wrap">
-                                      {q.solution}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Retest & Delete Actions */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
-                      <button
-                        onClick={() => {
-                          if (confirm(`Do you want to reset all active answers and retest '${item.testTitle}'?`)) {
-                            onRetest(item.testId);
-                          }
-                        }}
-                        className="flex-1 py-3 bg-indigo-650 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold transition-all active:scale-97 cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
-                      >
-                        <RotateCcw className="w-3.8 h-3.8" />
-                        <span>Retest This Paper</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          if (confirm("Delete this completed attempt log permanently from history? (Does not affect dashboard general roadmap logs)")) {
-                            onDeleteHistoryItem(item.id);
-                          }
-                        }}
-                        className="p-3 text-slate-400 hover:text-red-500 dark:text-zinc-500 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer border border-slate-200/50 dark:border-zinc-800"
-                        title="Delete attempt record"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                  </div>
-                )}
+                {/* Direct quick delete shortcut button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm("Delete this completed attempt log permanently from history?")) {
+                      onDeleteHistoryItem(item.id);
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 dark:text-zinc-650 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-all cursor-pointer border border-transparent hover:border-slate-150 dark:hover:border-zinc-700/50"
+                  title="Wipe attempt permanently"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             );
           })
         )}
       </div>
+
+      {/* Maximized Detailed Report view loaded elegantly as absolute frame takeover */}
+      {activeReviewItem && (
+        <DetailedHistoryReview
+          item={activeReviewItem}
+          onClose={() => setActiveReviewItem(null)}
+          onRetest={onRetest}
+        />
+      )}
     </div>
   );
 }

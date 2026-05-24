@@ -11,7 +11,8 @@ import {
   Award,
   Pencil,
   Check,
-  X
+  X,
+  ClipboardList
 } from "lucide-react";
 import { Test, TestProgress } from "../types";
 
@@ -23,6 +24,8 @@ interface TestLibraryProps {
   onOpenUpload: () => void;
   quote?: { text: string; author: string };
   onRenameTest?: (testId: string, newTitle: string) => void;
+  remainingPlannerTasksCount?: number;
+  setActiveTab?: (tab: any) => void;
 }
 
 export default function TestLibrary({
@@ -33,6 +36,8 @@ export default function TestLibrary({
   onOpenUpload,
   quote,
   onRenameTest,
+  remainingPlannerTasksCount = 0,
+  setActiveTab,
 }: TestLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
@@ -132,6 +137,30 @@ export default function TestLibrary({
           </div>
         </div>
       </div>
+
+      {/* Daily Study Planner agenda quick widget (redefined for custom requirement) */}
+      {remainingPlannerTasksCount > 0 && setActiveTab && (
+        <div
+          onClick={() => setActiveTab("planner")}
+          className="mb-4 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-200/50 hover:border-amber-350 dark:border-amber-900/35 rounded-2xl p-3.5 flex items-center justify-between cursor-pointer transition-all animate-slide-up select-none shadow-xs"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-550/15 flex items-center justify-center text-amber-505 shrink-0">
+              <ClipboardList className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-800 dark:text-zinc-100">
+                You have {remainingPlannerTasksCount} target{remainingPlannerTasksCount > 1 ? "s" : ""} left on your daily planner!
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-zinc-400">Keep up your daily NEET disciplines to stay on target.</p>
+            </div>
+          </div>
+          <div className="text-amber-500 dark:text-amber-400 shrink-0 flex items-center gap-0.5 text-[10px] font-black uppercase tracking-wider">
+            <span>Planner Desk</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      )}
 
       {/* Search and control bar */}
       <div id="search-bar" className="flex items-center gap-2 mb-4 shrink-0">

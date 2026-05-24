@@ -9,7 +9,9 @@ import StudyRoadmap from "./components/StudyRoadmap";
 import MistakeGym from "./components/MistakeGym";
 import ExamHistory from "./components/ExamHistory";
 import SyncSettingsModal from "./components/SyncSettingsModal";
-import { BookOpen, TrendingUp, Dumbbell, History, Database } from "lucide-react";
+import PlannerView, { PlannerTask } from "./components/PlannerView";
+import RelaxView from "./components/RelaxView";
+import { BookOpen, TrendingUp, Dumbbell, History, Database, ClipboardList, Sparkles } from "lucide-react";
 import { getSampleTest } from "./data";
 import { getBiologyMarathonTest } from "./biology_data";
 import { Test, TestProgress, ExamHistoryItem } from "./types";
@@ -91,7 +93,7 @@ export default function App() {
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [activeTab, setActiveTab] = useState<"library" | "roadmap" | "gym" | "history">("library");
+  const [activeTab, setActiveTab] = useState<"library" | "roadmap" | "gym" | "history" | "planner" | "relax">("library");
 
   const [activeQuote] = useState(() => getRandomQuote());
 
@@ -108,6 +110,55 @@ export default function App() {
     }
     return [];
   });
+
+  // Daily Planner tasks state with persistence
+  const [plannerTasks, setPlannerTasks] = useState<PlannerTask[]>(() => {
+    try {
+      const stored = localStorage.getItem("practice_companion_planner_tasks_v1");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+
+  // Synchronize planner tasks
+  useEffect(() => {
+    try {
+      localStorage.setItem("practice_companion_planner_tasks_v1", JSON.stringify(plannerTasks));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [plannerTasks]);
+
+  const handleAddPlannerTask = (text: string, subject: PlannerTask["subject"]) => {
+    const newTask: PlannerTask = {
+      id: `task-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      text,
+      subject,
+      createdAt: new Date().toISOString(),
+      completed: false,
+    };
+    setPlannerTasks((prev) => [newTask, ...prev]);
+  };
+
+  const handleTogglePlannerTask = (id: string) => {
+    setPlannerTasks((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    );
+  };
+
+  const handleDeletePlannerTask = (id: string) => {
+    setPlannerTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleClearCompletedPlannerTasks = () => {
+    setPlannerTasks((prev) => prev.filter((t) => !t.completed));
+  };
+
+  const remainingPlannerTasksCount = plannerTasks.filter((t) => !t.completed).length;
 
   // Synchronize exam history entries
   useEffect(() => {
@@ -376,6 +427,16 @@ export default function App() {
             onDeleteHistoryItem={handleDeleteHistoryItem}
             onRetest={handleRetest}
           />
+        ) : activeTab === "planner" ? (
+          <PlannerView
+            tasks={plannerTasks}
+            onAddTask={handleAddPlannerTask}
+            onToggleTask={handleTogglePlannerTask}
+            onDeleteTask={handleDeletePlannerTask}
+            onClearCompletedTasks={handleClearCompletedPlannerTasks}
+          />
+        ) : activeTab === "relax" ? (
+          <RelaxView />
         ) : (
           <TestLibrary
             tests={tests}
@@ -387,6 +448,8 @@ export default function App() {
             onDeleteTest={handleDeleteTest}
             onOpenUpload={() => setShowUploadModal(true)}
             onRenameTest={handleRenameTest}
+            remainingPlannerTasksCount={remainingPlannerTasksCount}
+            setActiveTab={setActiveTab}
           />
         )}
       </div>
@@ -402,6 +465,8 @@ export default function App() {
             { key: "roadmap", label: "Roadmap", icon: TrendingUp },
             { key: "gym", label: "Mistake Gym", icon: Dumbbell },
             { key: "history", label: "History", icon: History },
+            { key: "planner", label: "Planner", icon: ClipboardList, badge: remainingPlannerTasksCount > 0 ? remainingPlannerTasksCount : undefined },
+            { key: "relax", label: "Relax Zone", icon: Sparkles },
           ].map((tab) => {
             const isSelected = activeTab === tab.key;
             const Icon = tab.icon;
@@ -410,18 +475,23 @@ export default function App() {
                 id={`tab-button-${tab.key}`}
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as any)}
-                className={`flex flex-col items-center justify-center w-20 h-full transition-all cursor-pointer relative ${
+                className={`flex flex-col items-center justify-center w-14 h-full transition-all cursor-pointer relative ${
                   isSelected
                     ? "text-indigo-600 dark:text-indigo-400"
                     : "text-slate-400 hover:text-slate-500"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isSelected ? "scale-110" : ""}`} />
-                <span className={`text-[10px] mt-1 font-bold ${isSelected ? "text-indigo-650 dark:text-indigo-400 font-extrabold" : ""}`}>
+                <Icon className={`w-4.5 h-4.5 ${isSelected ? "scale-110" : ""}`} />
+                {tab.badge !== undefined && (
+                  <span className="absolute top-1 ml-5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-black text-white ring-2 ring-white dark:ring-zinc-900">
+                    {tab.badge}
+                  </span>
+                )}
+                <span className={`text-[8px] mt-1 font-bold ${isSelected ? "text-indigo-650 dark:text-indigo-400 font-extrabold" : ""}`}>
                   {tab.label}
                 </span>
                 {isSelected && (
-                  <span className="absolute bottom-1 w-5 h-0.5 bg-indigo-500 dark:bg-indigo-400 rounded-full" />
+                  <span className="absolute bottom-1 w-4 h-0.5 bg-indigo-505 dark:bg-indigo-400 rounded-full" />
                 )}
               </button>
             );

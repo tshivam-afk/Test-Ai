@@ -12,7 +12,8 @@ import {
   Info,
   Copy,
   Check,
-  ClipboardList
+  ClipboardList,
+  Share2
 } from "lucide-react";
 import { Test, TestProgress, ExamHistoryItem } from "../types";
 
@@ -141,6 +142,55 @@ export default function SyncSettingsModal({
     } catch (err: any) {
       console.error(err);
       setErrorMsg("Failed to generate backup text string.");
+    }
+  };
+
+  const [shareSuccess, setShareSuccess] = useState(false);
+
+  const handleShareBackup = async () => {
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    try {
+      const backupData = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        tests,
+        progress,
+        examHistory
+      };
+      const jsonString = JSON.stringify(backupData, null, 2);
+
+      if (navigator.share) {
+        const shareFile = new File([jsonString], `neet_preparation_backup_${Date.now()}.json`, {
+          type: "application/json"
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+          await navigator.share({
+            files: [shareFile],
+            title: "NEET Prep Study Workspace Backup",
+            text: "My NEET custom mock workbooks, progress, and history backup."
+          });
+          setShareSuccess(true);
+          setTimeout(() => setShareSuccess(false), 2000);
+          return;
+        }
+
+        await navigator.share({
+          title: "NEET Workspace Backup JSON String",
+          text: jsonString
+        });
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 2000);
+      } else {
+        await navigator.clipboard.writeText(jsonString);
+        setSuccessMsg("Backup JSON copied! Web Share is restricted inside iframe preview - you can paste directly into WhatsApp / Drive / Mail.");
+      }
+    } catch (err: any) {
+      if (err.name !== "AbortError") {
+        console.error("Web share failed", err);
+        setErrorMsg("Sharing was blocked. You can still download the backup file or use the copy button.");
+      }
     }
   };
 
@@ -418,6 +468,23 @@ export default function SyncSettingsModal({
               >
                 <Download className="w-4 h-4" />
                 Download Local Backup (.json)
+              </button>
+
+              <button
+                onClick={handleShareBackup}
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {shareSuccess ? (
+                  <>
+                    <Check className="w-4 h-4 text-white animate-bounce" />
+                    Shared Successfully!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="w-4 h-4 text-emerald-100" />
+                    Share Workspace Backup Directly
+                  </>
+                )}
               </button>
 
               <button

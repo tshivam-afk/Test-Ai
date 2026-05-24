@@ -180,7 +180,17 @@ export default function QuizView({
     }
 
     const updatedAnswers = { ...answers, [currentQuestion.number]: optionIdx };
-    saveProgress({ answers: updatedAnswers });
+    
+    // Automatically default confidence level to "sure" representing "confident" (custom request)
+    const updatedConfidences = { ...confidences };
+    if (!updatedConfidences[currentQuestion.number]) {
+      updatedConfidences[currentQuestion.number] = "sure";
+    }
+
+    saveProgress({ 
+      answers: updatedAnswers,
+      confidences: updatedConfidences
+    });
   };
 
   // Select confidence level
