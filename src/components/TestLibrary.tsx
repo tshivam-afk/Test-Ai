@@ -8,7 +8,10 @@ import {
   Trash2,
   BookOpen,
   Sparkles,
-  Award
+  Award,
+  Pencil,
+  Check,
+  X
 } from "lucide-react";
 import { Test, TestProgress } from "../types";
 
@@ -19,6 +22,7 @@ interface TestLibraryProps {
   onDeleteTest: (testId: string) => void;
   onOpenUpload: () => void;
   quote?: { text: string; author: string };
+  onRenameTest?: (testId: string, newTitle: string) => void;
 }
 
 export default function TestLibrary({
@@ -28,8 +32,11 @@ export default function TestLibrary({
   onDeleteTest,
   onOpenUpload,
   quote,
+  onRenameTest,
 }: TestLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingTestId, setEditingTestId] = useState<string | null>(null);
+  const [editTitleText, setEditTitleText] = useState("");
 
   const filteredTests = tests.filter((t) =>
     t.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -67,21 +74,21 @@ export default function TestLibrary({
             Study Companion
           </h2>
         </div>
-        <div className="w-9 h-9 rounded-full bg-indigo-650 text-white dark:bg-indigo-600 dark:text-zinc-100 flex items-center justify-center font-bold text-xs shadow-md select-none shrink-0">
+        <div className="w-9 h-9 rounded-full bg-indigo-600 text-white dark:bg-indigo-600 dark:text-zinc-100 flex items-center justify-center font-bold text-xs shadow-md select-none shrink-0 font-sans">
           NEET
         </div>
       </header>
 
       {/* Inspirational Quote Card */}
       {quote && (
-        <div id="motivational-quote-card" className="bg-gradient-to-r from-indigo-50 to-indigo-100/30 dark:from-indigo-950/20 dark:to-zinc-900/10 border border-indigo-100/50 dark:border-indigo-950/40 rounded-3xl p-4.5 mb-5 select-none relative overflow-hidden flex flex-col justify-center animate-fade-in">
-          <div className="absolute right-3 bottom-0.5 text-indigo-550/5 dark:text-indigo-400/5 pointer-events-none">
+        <div id="motivational-quote-card" className="bg-gradient-to-r from-indigo-50/50 to-indigo-100/20 dark:from-indigo-950/20 dark:to-zinc-900/10 border border-indigo-100/50 dark:border-indigo-950/40 rounded-3xl p-4.5 mb-5 select-none relative overflow-hidden flex flex-col justify-center animate-fade-in">
+          <div className="absolute right-3 bottom-0.5 text-indigo-500/10 dark:text-indigo-400/5 pointer-events-none">
             <Sparkles className="w-20 h-20 stroke-[1.2]" />
           </div>
-          <p className="text-[12px] italic font-medium text-slate-800 dark:text-zinc-200 leading-relaxed font-sans">
+          <p className="text-[12px] italic font-medium text-slate-800 dark:text-zinc-100 leading-relaxed font-sans">
             "{quote.text}"
           </p>
-          <span className="text-[9px] text-indigo-650 dark:text-indigo-400 font-extrabold tracking-wide block mt-2 text-right">
+          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold tracking-wide block mt-2 text-right">
             — {quote.author}
           </span>
         </div>
@@ -236,9 +243,65 @@ export default function TestLibrary({
                         </span>
                       )}
                     </div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
-                      {test.title}
-                    </h4>
+                    {editingTestId === test.id ? (
+                      <div className="flex items-center gap-1 mt-1 pr-2 w-full">
+                        <input
+                          type="text"
+                          value={editTitleText}
+                          onChange={(e) => setEditTitleText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              if (editTitleText.trim() && onRenameTest) {
+                                onRenameTest(test.id, editTitleText.trim());
+                              }
+                              setEditingTestId(null);
+                            } else if (e.key === "Escape") {
+                              setEditingTestId(null);
+                            }
+                          }}
+                          className="flex-1 text-xs px-2.5 py-1.5 border border-indigo-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg text-slate-800 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-sans"
+                          autoFocus
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (editTitleText.trim() && onRenameTest) {
+                              onRenameTest(test.id, editTitleText.trim());
+                            }
+                            setEditingTestId(null);
+                          }}
+                          className="p-1.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTestId(null);
+                          }}
+                          className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-400 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 group/title w-full mt-1.5">
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-snug flex-1 line-clamp-2">
+                          {test.title}
+                        </h4>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTestId(test.id);
+                            setEditTitleText(test.title);
+                          }}
+                          className="opacity-0 group-hover/title:opacity-100 focus:opacity-100 p-1 text-slate-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 rounded transition-opacity cursor-pointer inline-flex items-center"
+                          title="Rename workbook"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Delete Option (do not allow deleting default sample to keep fail-safe active) */}

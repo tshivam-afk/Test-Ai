@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface MobileFrameProps {
   children: ReactNode;
-  theme: "light" | "dark";
+  theme: "light" | "dark" | "amoled";
 }
 
 export default function MobileFrame({ children, theme }: MobileFrameProps) {

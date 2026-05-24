@@ -112,9 +112,9 @@ export default function ExamHistory({
         </h2>
       </div>
 
-      {/* Stats Cards Dashboard */}
+       {/* Stats Cards Dashboard */}
       <div id="history-stats-dashboard" className="grid grid-cols-3 gap-2.5 select-none">
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-150 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
           <History className="w-4 h-4 text-rose-500 mb-1" />
           <div>
             <span className="text-[9px] text-slate-400 font-bold block">Simulated</span>
@@ -124,7 +124,7 @@ export default function ExamHistory({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-150 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
           <Award className="w-4 h-4 text-amber-500 mb-1" />
           <div>
             <span className="text-[9px] text-slate-400 font-bold block">Best Mark</span>
@@ -134,7 +134,7 @@ export default function ExamHistory({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-150 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-800/80 flex flex-col justify-between shadow-xs">
           <Sparkles className="w-4 h-4 text-emerald-500 mb-1" />
           <div>
             <span className="text-[9px] text-slate-400 font-bold block">Avg. Accu.</span>
@@ -147,7 +147,7 @@ export default function ExamHistory({
 
       {/* Search Input Filter */}
       <div id="history-search" className="flex items-center gap-2">
-        <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-150 dark:border-zinc-800/80 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
+        <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-200 dark:border-zinc-800/80 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
           <input
             id="history-search-input"
             type="text"
@@ -163,11 +163,11 @@ export default function ExamHistory({
       <div id="history-log-shelf" className="flex-1 space-y-3">
         {filteredItems.length === 0 ? (
           <div id="empty-history-card" className="flex flex-col items-center justify-center py-12 px-6 bg-white dark:bg-[#121214] rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800/80 text-center">
-            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-855 flex items-center justify-center mb-3 text-slate-400">
+            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center mb-3 text-slate-400">
               <History className="w-6 h-6" />
             </div>
-            <p className="text-sm font-black text-slate-850 dark:text-zinc-300">No Exam Attempts Logged</p>
-            <p className="text-xs text-slate-450 dark:text-zinc-500 mt-1 max-w-[240px] leading-normal">
+            <p className="text-sm font-black text-slate-800 dark:text-zinc-300">No Exam Attempts Logged</p>
+            <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1 max-w-[240px] leading-normal">
               Simulate questions under <strong>Exam Mode</strong> inside workbooks. Once submitted, your NEET analysis report logs will populate here.
             </p>
           </div>
@@ -194,10 +194,10 @@ export default function ExamHistory({
               <div
                 key={item.id}
                 id={`history-[${item.id}]`}
-                className={`p-4 bg-white dark:bg-[#121214] border rounded-2xl transition-all flex flex-col relative ${
+                 className={`p-4 bg-white dark:bg-[#121214] border rounded-2xl transition-all flex flex-col relative ${
                   isExpanded
-                    ? "border-rose-450 ring-1 ring-rose-500/15 shadow-md"
-                    : "border-slate-100 dark:border-zinc-800/80 hover:border-slate-350 dark:hover:border-zinc-700"
+                    ? "border-rose-400 ring-1 ring-rose-500/15 shadow-md"
+                    : "border-slate-100 dark:border-zinc-800/80 hover:border-slate-300 dark:hover:border-zinc-700"
                 }`}
               >
                 {/* Header overview - click to expand details */}
@@ -207,7 +207,7 @@ export default function ExamHistory({
                 >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 pr-4">
-                      <span className="text-[8px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-1 py-0.5 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 flex items-center gap-1 max-w-[170px] truncate">
+                      <span className="text-[8px] font-black tracking-wider uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 flex items-center gap-1 max-w-[170px] truncate">
                         <Calendar className="w-2.5 h-2.5" />
                         {new Date(item.dateTime).toLocaleDateString(undefined, {
                           month: "short",
@@ -216,7 +216,7 @@ export default function ExamHistory({
                           minute: "2-digit",
                         })}
                       </span>
-                      <h4 className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
+                      <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
                         {item.testTitle}
                       </h4>
                     </div>
@@ -230,24 +230,24 @@ export default function ExamHistory({
                     </div>
                   </div>
 
-                  {/* High level info pills list */}
+                   {/* High level info pills list */}
                   <div className="flex items-center justify-between mt-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-605 dark:text-emerald-400">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         {item.score.correctCount} Correct
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-505 dark:text-rose-400">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 dark:text-rose-400">
                         {item.score.incorrectCount} Wrong
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-505 dark:text-zinc-400">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-zinc-400">
                         {item.score.blankCount} Blank
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800 text-slate-450 dark:text-zinc-400 font-mono flex items-center gap-0.5">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-50 dark:bg-zinc-800 text-slate-400 dark:text-zinc-400 font-mono flex items-center gap-0.5">
                         <Clock className="w-2.5 h-2.5" />
                         {formatTimer(item.timeSpent)}
                       </span>
                     </div>
-                    <div className="text-slate-450 dark:text-zinc-500">
+                    <div className="text-slate-400 dark:text-zinc-500">
                       {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
@@ -298,14 +298,14 @@ export default function ExamHistory({
                                     {q.subject}
                                   </span>
                                 </div>
-                                <p className="font-bold text-slate-800 dark:text-zinc-250 leading-relaxed">
+                                <p className="font-bold text-slate-800 dark:text-zinc-100 leading-relaxed">
                                   {q.questionText}
                                 </p>
                                 <div className="space-y-1.5 pl-1 select-none">
-                                  <div className="text-[10px] text-slate-450">
+                                  <div className="text-[10px] text-slate-400 dark:text-zinc-400">
                                     Your choice: <span className="font-bold text-rose-500 line-through pr-1">{q.options[userOptionIdx!] || "None"}</span>
                                   </div>
-                                  <div className="text-[10px] text-slate-450">
+                                  <div className="text-[10px] text-slate-400 dark:text-zinc-400">
                                     Correct: <span className="font-bold text-emerald-500">{q.options[correctOptionIdx]}</span>
                                   </div>
                                 </div>
@@ -342,7 +342,7 @@ export default function ExamHistory({
                             return (
                               <div
                                 key={q.number}
-                                className="p-3.5 bg-slate-50 dark:bg-zinc-900/60 border border-slate-150 dark:border-zinc-800/80 rounded-2xl space-y-2 text-xs"
+                               className="p-3.5 bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80 rounded-2xl space-y-2 text-xs"
                               >
                                 <div className="flex items-center justify-between">
                                   <span className="font-extrabold text-[10px] text-slate-400">
@@ -352,10 +352,10 @@ export default function ExamHistory({
                                     {q.subject}
                                   </span>
                                 </div>
-                                <p className="font-bold text-slate-800 dark:text-zinc-250 leading-relaxed">
+                                <p className="font-bold text-slate-800 dark:text-zinc-100 leading-relaxed">
                                   {q.questionText}
                                 </p>
-                                <div className="text-[10px] text-slate-450 select-none pl-1">
+                                <div className="text-[10px] text-slate-400 dark:text-zinc-400 select-none pl-1">
                                   Correct Answer: <span className="font-bold text-emerald-500">{q.options[correctOptionIdx]}</span>
                                 </div>
                                 {q.solution && (

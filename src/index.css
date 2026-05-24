@@ -43,3 +43,63 @@
     background: #475569;
   }
 }
+
+/* AMOLED Deep Pitch Pure Black styling overrides */
+.amoled, 
+.amoled body, 
+.amoled #android-frame-root,
+.amoled #android-device-wrapper,
+.amoled #android-app-content,
+.amoled #router-view-body,
+.amoled #app-header-bar,
+.amoled #canvas-bottom-tabs,
+.amoled #android-navigation-pill,
+.amoled .bg-white,
+.amoled .bg-slate-50,
+.amoled .bg-neutral-50,
+.amoled .bg-gray-50,
+.amoled .bg-[#09090b],
+.amoled .bg-[#121214],
+.amoled .bg-[#18181b],
+.amoled .bg-zinc-900,
+.amoled .dark\:bg-zinc-900,
+.amoled .dark\:bg-\[\#121214\],
+.amoled .dark\:bg-\[\#18181b\],
+.amoled .dark\:bg-\[\#09090b\],
+.amoled .dark\:bg-zinc-950 {
+  background-color: #000000 !important;
+  background-image: none !important;
+}
+
+/* high contrast border details for pitch black environment */
+.amoled .border,
+.amoled .border-t,
+.amoled .border-b,
+.amoled .border-l,
+.amoled .border-r,
+.amoled .border-slate-100,
+.amoled .border-slate-200,
+.amoled .dark\:border-zinc-800,
+.amoled .dark\:border-zinc-800\/80,
+.amoled .dark\:border-zinc-800\/60,
+.amoled .border-gray-150 {
+  border-color: #171717 !important;
+}
+
+.amoled .text-slate-900,
+.amoled .dark\:text-zinc-100,
+.amoled .dark\:text-zinc-205,
+.amoled .dark\:text-zinc-200,
+.amoled .text-slate-800 {
+  color: #f5f5f7 !important;
+}
+
+.amoled .text-slate-500,
+.amoled .dark\:text-zinc-500 {
+  color: #8e8e93 !important;
+}
+
+.amoled .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333 !important;
+}
+
