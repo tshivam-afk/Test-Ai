@@ -9,7 +9,10 @@ import {
   Trash2,
   FileText,
   ShieldAlert,
-  Info
+  Info,
+  Copy,
+  Check,
+  ClipboardList
 } from "lucide-react";
 import { Test, TestProgress, ExamHistoryItem } from "../types";
 
@@ -39,6 +42,9 @@ export default function SyncSettingsModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showWipeConfirm, setShowWipeConfirm] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [pastedJsonText, setPastedJsonText] = useState("");
+  const [showPasteArea, setShowPasteArea] = useState(false);
 
   // Read-in backup state
   const [parsedBackup, setParsedBackup] = useState<{
@@ -82,10 +88,101 @@ export default function SyncSettingsModal({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      setSuccessMsg("Backup downloaded successfully! Store it safely or send it to another browser.");
+      setSuccessMsg("Download request sent! Since browser sandboxes can occasionally block automatic downloads inside iframe wrappers, we highly recommend also tapping 'Copy Backup to Clipboard' below to save your text safely!");
     } catch (err: any) {
       console.error(err);
       setErrorMsg("Failed to generate backup JSON file.");
+    }
+  };
+
+  const handleCopyBackupText = () => {
+    try {
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      setCopied(false);
+
+      const dataToBackup = {
+        app: "NEET PREP COMPANION",
+        version: "1.0.0",
+        backupTimestamp: new Date().toISOString(),
+        workbooks: tests,
+        progress,
+        history: examHistory,
+      };
+
+      const jsonStr = JSON.stringify(dataToBackup, null, 2);
+      
+      navigator.clipboard.writeText(jsonStr)
+        .then(() => {
+          setCopied(true);
+          setSuccessMsg("Backup text copied to clipboard successfully! You can paste and save this text safely in any memo, WhatsApp, or notes application.");
+          setTimeout(() => setCopied(false), 4000);
+        })
+        .catch((err) => {
+          console.error(err);
+          // Standard document execCommand backup fallback
+          const textArea = document.createElement("textarea");
+          textArea.value = jsonStr;
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          try {
+            document.execCommand('copy');
+            setCopied(true);
+            setSuccessMsg("Backup text copied (fallback mode) to clipboard! Paste and save it securely.");
+            setTimeout(() => setCopied(false), 4000);
+          } catch (fallbackErr) {
+            setErrorMsg("Direct clipboard copy was blocked by the browser wrapper. Please tap \"Show Backup String\" to copy manually.");
+          }
+          document.body.removeChild(textArea);
+        });
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg("Failed to generate backup text string.");
+    }
+  };
+
+  const handleParsePastedJson = () => {
+    setSuccessMsg(null);
+    setErrorMsg(null);
+    setParsedBackup(null);
+    setParsedFilename(null);
+
+    const txt = pastedJsonText.trim();
+    if (!txt) {
+      setErrorMsg("Please paste your JSON backup text first.");
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(txt);
+
+      // Validation checks
+      if (!parsed || (typeof parsed !== "object")) {
+        throw new Error("Invalid format. Pasted content is not a valid JSON object.");
+      }
+
+      const importedWorkbooks = Array.isArray(parsed.workbooks) ? parsed.workbooks : [];
+      const importedProgress = parsed.progress && typeof parsed.progress === "object" ? parsed.progress : {};
+      const importedHistory = Array.isArray(parsed.history) ? parsed.history : [];
+
+      if (importedWorkbooks.length === 0 && Object.keys(importedProgress).length === 0 && importedHistory.length === 0) {
+        throw new Error("Pasted text does not contain any valid NEET companion workbook or progression data.");
+      }
+
+      setParsedBackup({
+        workbooks: importedWorkbooks,
+        progress: importedProgress,
+        history: importedHistory,
+      });
+      setParsedFilename("Pasted Backup Archive Content");
+      setShowPasteArea(false);
+      setPastedJsonText("");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Invalid JSON markup. Ensure you copied the entire backup text completely without leaving out any curly brackets.");
     }
   };
 
@@ -314,55 +411,121 @@ export default function SyncSettingsModal({
               </p>
             </div>
 
-            <button
-              onClick={handleExportBackup}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              Download Local Backup (.json)
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleExportBackup}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Download Local Backup (.json)
+              </button>
+
+              <button
+                onClick={handleCopyBackupText}
+                className="w-full py-2.5 bg-slate-100 hover:bg-slate-205 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-slate-800 dark:text-zinc-100 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200 dark:border-zinc-800"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-500 animate-bounce" />
+                    Copied to Clipboard!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 text-indigo-500" />
+                    Copy Backup text to Clipboard
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Import Action Card */}
-          <div className="bg-white dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800 rounded-2xl p-4 space-y-3">
+          <div className="bg-white dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800 rounded-2xl p-4 space-y-4">
             <div>
               <h4 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200 uppercase tracking-wider">
                 2. Restore / Import Archive
               </h4>
               <p className="text-[11px] text-slate-450 dark:text-zinc-500 mt-0.5">
-                Load a previously exported '.json' backup file to restore custom NEET material.
+                Load a previously exported '.json' backup file, or paste your copied JSON backup string below to restore custom NEET material.
               </p>
             </div>
 
             {/* Drag & Drop Upload Zone */}
             {!parsedBackup ? (
-              <div
-                onDragEnter={handleDrag}
-                onDragOver={handleDrag}
-                onDragLeave={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
-                  dragActive
-                    ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20"
-                    : "border-slate-200 dark:border-zinc-800 hover:border-slate-350 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-950/20"
-                }`}
-              >
-                <input
-                  type="file"
-                  accept=".json"
-                  ref={fileInputRef}
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                />
-                <Upload className="w-6 h-6 text-indigo-500" />
-                <div className="text-xs text-slate-650 dark:text-zinc-350">
-                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline">
-                    Click to browse
-                  </span>{" "}
-                  or drag backup file here
+              <div className="space-y-3">
+                <div
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                    dragActive
+                      ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20"
+                      : "border-slate-200 dark:border-zinc-800 hover:border-slate-350 dark:hover:border-zinc-700 bg-slate-50/50 dark:bg-zinc-950/20"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept=".json"
+                    ref={fileInputRef}
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+                  <Upload className="w-6 h-6 text-indigo-500" />
+                  <div className="text-xs text-slate-650 dark:text-zinc-350">
+                    <span className="font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline">
+                      Click to browse
+                    </span>{" "}
+                    or drag backup file here
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">JSON format archives</p>
                 </div>
-                <p className="text-[10px] text-slate-400">JSON format archives only</p>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-slate-150 dark:border-zinc-850"></div>
+                  <span className="flex-shrink mx-3 text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-bold tracking-widest">or</span>
+                  <div className="flex-grow border-t border-slate-150 dark:border-zinc-850"></div>
+                </div>
+
+                {showPasteArea ? (
+                  <div className="space-y-2.5 animate-slide-up bg-slate-50 dark:bg-zinc-900/45 p-3 rounded-2xl border border-dashed border-indigo-200/50 dark:border-zinc-800">
+                    <textarea
+                      placeholder="Paste your copied JSON backup text here..."
+                      value={pastedJsonText}
+                      onChange={(e) => setPastedJsonText(e.target.value)}
+                      rows={5}
+                      className="w-full text-[11px] font-mono p-2.5 bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-505 resize-none"
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleParsePastedJson}
+                        className="flex-1 py-1.5 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all cursor-pointer"
+                      >
+                        Load Backup Text
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowPasteArea(false);
+                          setPastedJsonText("");
+                        }}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-zinc-300 rounded-xl text-xs font-medium cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <button
+                      onClick={() => setShowPasteArea(true)}
+                      className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <ClipboardList className="w-3.5 h-3.5" />
+                      Paste Backup Text Instead
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               /* Backup File Details & Action Confirmation */
@@ -376,19 +539,19 @@ export default function SyncSettingsModal({
 
                 <div className="grid grid-cols-3 gap-2 text-center text-[11px] text-slate-600 dark:text-zinc-450">
                   <div>
-                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                    <span className="block font-black text-slate-805 dark:text-zinc-200 text-sm">
                       {parsedBackup.workbooks.length}
                     </span>
                     Workbooks
                   </div>
                   <div>
-                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                    <span className="block font-black text-slate-805 dark:text-zinc-200 text-sm">
                       {Object.keys(parsedBackup.progress).length}
                     </span>
                     Progress Maps
                   </div>
                   <div>
-                    <span className="block font-black text-slate-800 dark:text-zinc-205 text-sm">
+                    <span className="block font-black text-slate-805 dark:text-zinc-200 text-sm">
                       {parsedBackup.history.length}
                     </span>
                     Exam Logs

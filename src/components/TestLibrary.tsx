@@ -249,7 +249,15 @@ export default function TestLibrary({
                       </div>
                     ) : (
                       <div className="flex items-center gap-1.5 group/title w-full mt-1.5">
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-snug flex-1 line-clamp-2">
+                        <h4 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingTestId(test.id);
+                            setEditTitleText(test.title);
+                          }}
+                          className="font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-snug flex-1 line-clamp-2 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+                          title="Click to rename workbook"
+                        >
                           {test.title}
                         </h4>
                         <button
@@ -258,10 +266,10 @@ export default function TestLibrary({
                             setEditingTestId(test.id);
                             setEditTitleText(test.title);
                           }}
-                          className="opacity-0 group-hover/title:opacity-100 focus:opacity-100 p-1 text-slate-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 rounded transition-opacity cursor-pointer inline-flex items-center"
+                          className="p-1.5 text-slate-450 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800/60 transition-all cursor-pointer inline-flex items-center shrink-0"
                           title="Rename workbook"
                         >
-                          <Pencil className="w-3 h-3" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}
