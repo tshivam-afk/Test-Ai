@@ -81,21 +81,21 @@ export default function TestLibrary({
 
       {/* Inspirational Quote Card */}
       {quote && (
-        <div id="motivational-quote-card" className="bg-gradient-to-r from-indigo-50/50 to-indigo-100/20 dark:from-indigo-950/20 dark:to-zinc-900/10 border border-indigo-100/50 dark:border-indigo-950/40 rounded-3xl p-4.5 mb-5 select-none relative overflow-hidden flex flex-col justify-center animate-fade-in">
+        <div id="motivational-quote-card" className="bg-gradient-to-r from-indigo-50/50 to-indigo-100/20 dark:from-indigo-950/20 dark:to-zinc-900/10 border border-indigo-100/50 dark:border-indigo-950/40 rounded-2xl p-4 mb-4 select-none relative overflow-hidden shrink-0 animate-fade-in">
           <div className="absolute right-3 bottom-0.5 text-indigo-500/10 dark:text-indigo-400/5 pointer-events-none">
-            <Sparkles className="w-20 h-20 stroke-[1.2]" />
+            <Sparkles className="w-16 h-16 stroke-[1.2]" />
           </div>
-          <p className="text-[12px] italic font-medium text-slate-800 dark:text-zinc-100 leading-relaxed font-sans">
+          <p className="text-[12px] italic font-semibold text-slate-800 dark:text-zinc-100 leading-relaxed font-sans pr-8">
             "{quote.text}"
           </p>
-          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold tracking-wide block mt-2 text-right">
+          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-extrabold tracking-wide block mt-1.5 text-right">
             — {quote.author}
           </span>
         </div>
       )}
 
       {/* Stats Summary Bento grid */}
-      <div id="stats-bento" className="grid grid-cols-3 gap-2.5 mb-5 select-none">
+      <div id="stats-bento" className="grid grid-cols-3 gap-2.5 mb-5 select-none shrink-0">
         <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-100 dark:border-zinc-800 flex flex-col justify-between shadow-xs">
           <BookOpen className="w-5 h-5 text-indigo-500 mb-2" />
           <div>
@@ -134,7 +134,7 @@ export default function TestLibrary({
       </div>
 
       {/* Search and control bar */}
-      <div id="search-bar" className="flex items-center gap-2 mb-4">
+      <div id="search-bar" className="flex items-center gap-2 mb-4 shrink-0">
         <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-zinc-800 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
           <Search className="w-4 h-4 text-slate-400" />
           <input
@@ -154,43 +154,6 @@ export default function TestLibrary({
           title="Import question set"
         >
           <Plus className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* High-Yield Biology Exclusive practicing panel (Q91-Q180) */}
-      <div id="biology-yield-pnl" className="mb-5 p-4 rounded-3xl bg-gradient-to-br from-indigo-900/10 via-indigo-950/5 to-purple-900/5 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/40 dark:border-indigo-950/40 shadow-xs relative overflow-hidden flex flex-col justify-between">
-        <div className="absolute top-0 right-0 p-3 text-3xl opacity-15 select-none pointer-events-none">
-          🧬
-        </div>
-        <div className="flex items-start gap-3 mb-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/10 flex items-center justify-center shrink-0">
-            <span className="text-xl">🧬</span>
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-600 text-white tracking-wider uppercase">
-                NEET 91-180 exclusive
-              </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                Botany & Zoology
-              </span>
-            </div>
-            <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 mt-1.5 tracking-tight">
-              NEET Biology Section Practice
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-normal mt-0.5">
-              Practice 90 high-yield botanical & physiological questions specifically mapped to index sequence <strong>Q91 - Q180</strong>.
-            </p>
-          </div>
-        </div>
-
-        <button
-          id="btn-quicklaunch-biology"
-          onClick={() => onSelectTest("neet-biology-marathon-q91-180")}
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 hover:shadow-md text-white rounded-2xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
-        >
-          <span>Launch Biology Sector (91-180 Only)</span>
-          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 

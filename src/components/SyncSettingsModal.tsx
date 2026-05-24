@@ -54,6 +54,9 @@ export default function SyncSettingsModal({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{ text: string; type: "success" | "error" | "info" } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showTroubleshoot, setShowTroubleshoot] = useState(false);
+
+  const currentHost = typeof window !== "undefined" ? window.location.hostname : "your-app-domain.run.app";
 
   // Monitor Auth Changes
   useEffect(() => {
@@ -325,6 +328,41 @@ export default function SyncSettingsModal({
                 </svg>
                 Continue with Google Account
               </button>
+
+              {/* Troubleshooting Drawer Section */}
+              <div className="mt-3 text-left">
+                <button
+                  id="toggle-troubleshoot-btn"
+                  onClick={() => setShowTroubleshoot(!showTroubleshoot)}
+                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 mx-auto w-full justify-center transition-all focus:outline-none cursor-pointer"
+                >
+                  <span>Troubleshoot Google Sign-in Issues</span>
+                  <span>{showTroubleshoot ? "▲" : "▼"}</span>
+                </button>
+
+                {showTroubleshoot && (
+                  <div className="mt-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 text-xs text-slate-600 dark:text-zinc-400 animate-slide-up">
+                    <p className="font-extrabold text-slate-800 dark:text-zinc-200 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-150 dark:border-zinc-800/80 pb-2">
+                      <AlertCircle className="w-4 h-4 text-amber-500" />
+                      Fixing 'Action is Invalid' Error
+                    </p>
+                    <ol className="list-decimal list-inside space-y-2 text-[11.5px] leading-relaxed text-left">
+                      <li>
+                        <strong>Enable Google Provider</strong>: Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 underline font-semibold">Firebase Console</a>, open <strong>Authentication &gt; Sign-In Method</strong>, click <strong>Google</strong>, set to <strong>Enable</strong>, select a support email, and click <strong>Save</strong>.
+                      </li>
+                      <li>
+                        <strong>Authorize App Domain</strong>: In Firebase Authentication under <strong>Settings &gt; Authorized domains</strong>, click <strong>Add domain</strong> and enter:
+                        <div className="mt-1.5 p-2 bg-white dark:bg-zinc-950 rounded-lg border border-slate-100 dark:border-zinc-900/60 font-mono text-[10px] select-all break-all text-indigo-600 dark:text-indigo-400">
+                          {currentHost}
+                        </div>
+                      </li>
+                      <li>
+                        <strong>Try Direct Tab Page</strong>: In some sandboxed iframe previews, popups are restricted. Click the <strong>Open in New Tab</strong> icon in the upper-right corner of AI Studio to bypass cookies sandboxing.
+                      </li>
+                    </ol>
+                  </div>
+                )}
+              </div>
             </div>
           ) : (
             /* Logged in configurations detail workspace */
