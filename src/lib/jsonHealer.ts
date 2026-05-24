@@ -213,33 +213,55 @@ function conformToTestSchema(obj: any, logs: string[]): { success: boolean; data
 
     // 4. Resolve correct option index with maximum self-healing flexibility
     let correctIdx = 0;
-    const rawCorrect = q.correctOptionIndex !== undefined ? q.correctOptionIndex : (q.correctOption || q.answer || q.key || q.correct_answer || q.correct);
+    let hasExplicitCorrect = false;
 
-    if (typeof rawCorrect === "number") {
-      // Ensure index is within boundaries
-      correctIdx = Math.max(0, Math.min(rawCorrect, qOptions.length - 1));
-    } else if (typeof rawCorrect === "string") {
-      const parsedVal = rawCorrect.trim().toUpperCase();
-      
-      // Checking letter patterns or exact 0-based option strings
-      if (parsedVal === "0" || parsedVal === "A") correctIdx = 0;
-      else if (parsedVal === "1" || parsedVal === "B") correctIdx = 1;
-      else if (parsedVal === "2" || parsedVal === "C") correctIdx = 2;
-      else if (parsedVal === "3" || parsedVal === "D") correctIdx = 3;
-      else {
-        // Option text match fallback:
-        // What if correctOption is the matching text of the correct option string?
-        const matchIdx = qOptions.findIndex(o => o.toLowerCase() === parsedVal.toLowerCase() || o.toLowerCase().includes(parsedVal.toLowerCase()));
-        if (matchIdx >= 0) {
-          correctIdx = matchIdx;
-          logs.push(`- Q.${qNum}: Matched correct key string "${parsedVal}" to option index ${matchIdx}.`);
-        } else {
-          // Attempt integer parsing as direct 0-based option index
-          const num = parseInt(parsedVal, 10);
-          if (!isNaN(num)) {
-            correctIdx = Math.max(0, Math.min(num, qOptions.length - 1));
+    // Direct case-insensitive lookup for keys like "correctOptionIndex", "correctIndex", "correctindex", "correctOption", "correct"
+    const objKeys = Object.keys(q);
+    const primaryKey = objKeys.find(k => k.toLowerCase() === "correctoptionindex");
+    const secondaryKey = objKeys.find(k => k.toLowerCase() === "correctindex");
+    const tertiaryKey = objKeys.find(k => [
+      "correctoption", "correct_option", "correct_index", "correct", "answer", "key", "correct_answer", "correct_option_index", "ans", "correctidx"
+    ].includes(k.toLowerCase()));
+
+    let rawCorrect: any = undefined;
+    if (primaryKey !== undefined) {
+      rawCorrect = q[primaryKey];
+      hasExplicitCorrect = rawCorrect !== undefined && rawCorrect !== null;
+    } else if (secondaryKey !== undefined) {
+      rawCorrect = q[secondaryKey];
+      hasExplicitCorrect = rawCorrect !== undefined && rawCorrect !== null;
+    } else if (tertiaryKey !== undefined) {
+      rawCorrect = q[tertiaryKey];
+      hasExplicitCorrect = rawCorrect !== undefined && rawCorrect !== null;
+    }
+
+    if (hasExplicitCorrect) {
+      if (typeof rawCorrect === "number") {
+        // Ensure index is within boundaries
+        correctIdx = Math.max(0, Math.min(rawCorrect, qOptions.length - 1));
+      } else if (typeof rawCorrect === "string") {
+        const parsedVal = rawCorrect.trim().toUpperCase();
+        
+        // Checking letter patterns or exact 0-based option strings
+        if (parsedVal === "0" || parsedVal === "A") correctIdx = 0;
+        else if (parsedVal === "1" || parsedVal === "B") correctIdx = 1;
+        else if (parsedVal === "2" || parsedVal === "C") correctIdx = 2;
+        else if (parsedVal === "3" || parsedVal === "D") correctIdx = 3;
+        else {
+          // Option text match fallback:
+          // What if correctOption is the matching text of the correct option string?
+          const matchIdx = qOptions.findIndex(o => o.toLowerCase() === parsedVal.toLowerCase() || o.toLowerCase().includes(parsedVal.toLowerCase()));
+          if (matchIdx >= 0) {
+            correctIdx = matchIdx;
+            logs.push(`- Q.${qNum}: Matched correct key string "${parsedVal}" to option index ${matchIdx}.`);
           } else {
-            correctIdx = 0;
+            // Attempt integer parsing as direct 0-based option index
+            const num = parseInt(parsedVal, 10);
+            if (!isNaN(num)) {
+              correctIdx = Math.max(0, Math.min(num, qOptions.length - 1));
+            } else {
+              correctIdx = 0;
+            }
           }
         }
       }
@@ -260,7 +282,11 @@ function conformToTestSchema(obj: any, logs: string[]): { success: boolean; data
       solution: String(qSol)
     };
 
-    conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
+    if (hasExplicitCorrect) {
+      conformedQuestions.push(baseQuestion);
+    } else {
+      conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
+    }
   });
 
   if (conformedQuestions.length === 0) {
@@ -332,11 +358,13 @@ function extractViaRegex(rawText: string, logs: string[]): { success: boolean; d
     }
 
     // Try extracting correct option index
-    const correctMatch = block.match(/"(?:correctOptionIndex|correctOption|answer|key)"\s*:\s*(?:"([^"]+)"|(\d+))/i);
+    const correctMatch = block.match(/"(?:correctOptionIndex|correctOption|correctindex|correctIndex|answer|key)"\s*:\s*(?:"([^"]+)"|(\d+))/i);
     let correctIdx = 0;
+    let hasExplicitCorrectRegex = false;
     if (correctMatch) {
       const val = correctMatch[1] || correctMatch[2];
       if (val) {
+        hasExplicitCorrectRegex = true;
         if (/[A-D]/i.test(val)) {
           const letter = val.toUpperCase();
           if (letter === "A") correctIdx = 0;
@@ -369,7 +397,11 @@ function extractViaRegex(rawText: string, logs: string[]): { success: boolean; d
       solution
     };
 
-    conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
+    if (hasExplicitCorrectRegex) {
+      conformedQuestions.push(baseQuestion);
+    } else {
+      conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
+    }
   });
 
   if (conformedQuestions.length > 0) {
