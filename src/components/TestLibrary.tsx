@@ -18,6 +18,7 @@ interface TestLibraryProps {
   onSelectTest: (testId: string) => void;
   onDeleteTest: (testId: string) => void;
   onOpenUpload: () => void;
+  quote?: { text: string; author: string };
 }
 
 export default function TestLibrary({
@@ -26,6 +27,7 @@ export default function TestLibrary({
   onSelectTest,
   onDeleteTest,
   onOpenUpload,
+  quote,
 }: TestLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -56,7 +58,7 @@ export default function TestLibrary({
   return (
     <div id="library-root" className="flex-1 flex flex-col p-4 overflow-y-auto custom-scrollbar">
       {/* Title greeting bar */}
-      <header id="library-header" className="flex items-center justify-between mb-5">
+      <header id="library-header" className="flex items-center justify-between mb-4">
         <div>
           <span className="text-[10px] font-extrabold tracking-widest text-indigo-400 uppercase">
             Workbook Desk
@@ -65,10 +67,25 @@ export default function TestLibrary({
             Study Companion
           </h2>
         </div>
-        <div className="w-9 h-9 rounded-full bg-indigo-650 text-white dark:bg-indigo-600 dark:text-zinc-100 flex items-center justify-center font-bold text-xs shadow-md">
+        <div className="w-9 h-9 rounded-full bg-indigo-650 text-white dark:bg-indigo-600 dark:text-zinc-100 flex items-center justify-center font-bold text-xs shadow-md select-none shrink-0">
           NEET
         </div>
       </header>
+
+      {/* Inspirational Quote Card */}
+      {quote && (
+        <div id="motivational-quote-card" className="bg-gradient-to-r from-indigo-50 to-indigo-100/30 dark:from-indigo-950/20 dark:to-zinc-900/10 border border-indigo-100/50 dark:border-indigo-950/40 rounded-3xl p-4.5 mb-5 select-none relative overflow-hidden flex flex-col justify-center animate-fade-in">
+          <div className="absolute right-3 bottom-0.5 text-indigo-550/5 dark:text-indigo-400/5 pointer-events-none">
+            <Sparkles className="w-20 h-20 stroke-[1.2]" />
+          </div>
+          <p className="text-[12px] italic font-medium text-slate-800 dark:text-zinc-200 leading-relaxed font-sans">
+            "{quote.text}"
+          </p>
+          <span className="text-[9px] text-indigo-650 dark:text-indigo-400 font-extrabold tracking-wide block mt-2 text-right">
+            — {quote.author}
+          </span>
+        </div>
+      )}
 
       {/* Stats Summary Bento grid */}
       <div id="stats-bento" className="grid grid-cols-3 gap-2.5 mb-5 select-none">

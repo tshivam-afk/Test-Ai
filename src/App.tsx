@@ -5,10 +5,15 @@ import QuizView from "./components/QuizView";
 import UploadModal from "./components/UploadModal";
 import ThemeToggle from "./components/ThemeToggle";
 import SplashScreen from "./components/SplashScreen";
+import StudyRoadmap from "./components/StudyRoadmap";
+import MistakeGym from "./components/MistakeGym";
+import ExamHistory from "./components/ExamHistory";
+import { BookOpen, TrendingUp, Dumbbell, History } from "lucide-react";
 import { getSampleTest } from "./data";
 import { getBiologyMarathonTest } from "./biology_data";
-import { Test, TestProgress } from "./types";
+import { Test, TestProgress, ExamHistoryItem } from "./types";
 import { healQuestionCorrectIndexFromExplanation } from "./lib/jsonHealer";
+import { getRandomQuote } from "./lib/quotes";
 
 const LOCAL_STORAGE_TESTS_KEY = "practice_companion_tests_v1";
 const LOCAL_STORAGE_PROGRESS_KEY = "practice_companion_progress_v1";
@@ -85,6 +90,30 @@ export default function App() {
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [activeTab, setActiveTab] = useState<"library" | "roadmap" | "gym" | "history">("library");
+
+  const [activeQuote] = useState(() => getRandomQuote());
+
+  const [examHistory, setExamHistory] = useState<ExamHistoryItem[]>(() => {
+    try {
+      const stored = localStorage.getItem("practice_companion_exam_history_v1");
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Failed loading local exam history:", e);
+    }
+    return [];
+  });
+
+  // Synchronize exam history entries
+  useEffect(() => {
+    try {
+      localStorage.setItem("practice_companion_exam_history_v1", JSON.stringify(examHistory));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [examHistory]);
 
   // 2. Synchronize theme states automatically into document elements list
   useEffect(() => {
@@ -163,6 +192,21 @@ export default function App() {
     if (activeTestId === testId) {
       setActiveTestId(null);
     }
+  };
+
+  const handleDeleteHistoryItem = (itemId: string) => {
+    setExamHistory((prev) => prev.filter((item) => item.id !== itemId));
+  };
+
+  const handleRetest = (testId: string) => {
+    // Wipe current progress details to clear OMR sheets
+    setProgress((prev) => {
+      const copy = { ...prev };
+      delete copy[testId];
+      return copy;
+    });
+    setActiveTestId(testId);
+    setActiveTab("library");
   };
 
   // Safe lazy initializer for progress records matching a test paper
@@ -248,11 +292,56 @@ export default function App() {
             onBackToLibrary={() => {
               setActiveTestId(null);
             }}
+            onSubmitExamSuccess={(score, answers, confidences) => {
+              const matchedTest = tests.find((t) => t.id === activeTestId);
+              if (!matchedTest) return;
+
+              const newHistoryItem: ExamHistoryItem = {
+                id: `history-log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                testId: matchedTest.id,
+                testTitle: matchedTest.title,
+                dateTime: new Date().toISOString(),
+                timeSpent: activeProgress?.timeSpent || 0,
+                score,
+                answers,
+                confidences,
+                questions: matchedTest.questions,
+              };
+
+              setExamHistory((prev) => [newHistoryItem, ...prev]);
+            }}
+          />
+        ) : activeTab === "roadmap" ? (
+          <StudyRoadmap
+            tests={tests}
+            progress={progress}
+            onSelectTest={(id) => {
+              setActiveTestId(id);
+              setActiveTab("library");
+            }}
+          />
+        ) : activeTab === "gym" ? (
+          <MistakeGym
+            tests={tests}
+            progress={progress}
+            onUpdateProgress={handleUpdateTestProgress}
+            onSelectTest={(id, activeQNum) => {
+              handleUpdateTestProgress(id, { lastActiveQuestionNumber: activeQNum });
+              setActiveTestId(id);
+              setActiveTab("library");
+            }}
+          />
+        ) : activeTab === "history" ? (
+          <ExamHistory
+            historyItems={examHistory}
+            onDeleteHistoryItem={handleDeleteHistoryItem}
+            onRetest={handleRetest}
           />
         ) : (
           <TestLibrary
             tests={tests}
             progress={progress}
+            quote={activeQuote}
             onSelectTest={(id) => {
               setActiveTestId(id);
             }}
@@ -261,6 +350,44 @@ export default function App() {
           />
         )}
       </div>
+
+      {/* Premium Sticky Bottom Tab Navigation Bar */}
+      {!activeTestId && (
+        <div
+          id="canvas-bottom-tabs"
+          className="h-15 border-t border-slate-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex items-center justify-around select-none shrink-0 transition-colors"
+        >
+          {[
+            { key: "library", label: "Workbooks", icon: BookOpen },
+            { key: "roadmap", label: "Roadmap", icon: TrendingUp },
+            { key: "gym", label: "Mistake Gym", icon: Dumbbell },
+            { key: "history", label: "History", icon: History },
+          ].map((tab) => {
+            const isSelected = activeTab === tab.key;
+            const Icon = tab.icon;
+            return (
+              <button
+                id={`tab-button-${tab.key}`}
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                className={`flex flex-col items-center justify-center w-20 h-full transition-all cursor-pointer relative ${
+                  isSelected
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-slate-400 hover:text-slate-500"
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isSelected ? "scale-110" : ""}`} />
+                <span className={`text-[10px] mt-1 font-bold ${isSelected ? "text-indigo-650 dark:text-indigo-400 font-extrabold" : ""}`}>
+                  {tab.label}
+                </span>
+                {isSelected && (
+                  <span className="absolute bottom-1 w-5 h-0.5 bg-indigo-500 dark:bg-indigo-400 rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* PDF Scanned Parser Modal */}
       {showUploadModal && (

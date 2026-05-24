@@ -32,6 +32,24 @@ export interface TestProgress {
   };
   lastActiveQuestionNumber: number;
   lastUpdatedAt: string;
+  mode?: "study" | "exam"; // Stores selected practice type for this workbook attempt
+}
+
+export interface ExamHistoryItem {
+  id: string; // Unique log attempt UUID
+  testId: string;
+  testTitle: string;
+  dateTime: string;
+  timeSpent: number;
+  score: {
+    correctCount: number;
+    incorrectCount: number;
+    blankCount: number;
+    finalScore: number;
+  };
+  answers: Record<number, number>;
+  confidences?: Record<number, string>;
+  questions: Question[]; // Snapshot of questions for exact historic detail reviews
 }
 
 export interface AppState {
