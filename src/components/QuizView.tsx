@@ -649,7 +649,7 @@ export default function QuizView({
                     Hints & Solutions
                   </span>
                 </div>
-                <p className="text-sm text-slate-800 dark:text-zinc-205 leading-relaxed font-sans font-medium whitespace-pre-wrap">
+                <p className="text-sm text-slate-800 dark:text-zinc-200 leading-relaxed font-sans font-medium whitespace-pre-wrap">
                   {currentQuestion.solution || "No explicit explanation steps are matched to this worksheet."}
                 </p>
               </div>

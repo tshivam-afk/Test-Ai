@@ -251,14 +251,16 @@ function conformToTestSchema(obj: any, logs: string[]): { success: boolean; data
     // 6. Get subject or fallback
     const qSubCode = q.subject || q.category || q.topic || "Biology";
 
-    conformedQuestions.push({
+    const baseQuestion: Question = {
       number: qNum,
       subject: String(qSubCode),
       questionText: String(qText),
       options: qOptions,
       correctOptionIndex: correctIdx,
       solution: String(qSol)
-    });
+    };
+
+    conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
   });
 
   if (conformedQuestions.length === 0) {
@@ -358,14 +360,16 @@ function extractViaRegex(rawText: string, logs: string[]): { success: boolean; d
     const subMatch = block.match(/"(?:subject|category|topic)"\s*:\s*"([^"]+)"/i);
     const subject = subMatch ? subMatch[1] : "Biology";
 
-    conformedQuestions.push({
+    const baseQuestion: Question = {
       number: conformedQuestions.length + 1,
       subject,
       questionText: qText,
       options,
       correctOptionIndex: correctIdx,
       solution
-    });
+    };
+
+    conformedQuestions.push(healQuestionCorrectIndexFromExplanation(baseQuestion));
   });
 
   if (conformedQuestions.length > 0) {
@@ -385,3 +389,40 @@ function extractViaRegex(rawText: string, logs: string[]): { success: boolean; d
     logs
   };
 }
+
+/**
+ * Align correct option index dynamically if the explanation text explicitly asserts a letter key.
+ */
+export function healQuestionCorrectIndexFromExplanation(q: Question): Question {
+  const sol = q.solution ? q.solution.toLowerCase() : "";
+  if (!sol) return q;
+
+  const patterns = [
+    { regex: /(?:correct|right)\s+(?:option|choice|answer|key|pair|match)\s+(?:is|would\s+be)\s+([a-d]|\([a-d]\))/i, group: 1 },
+    { regex: /(?:option|choice|pair|answer)\s+(\([a-d]\)|[a-d])\s+is\s+(?:correct|right|matched)/i, group: 1 },
+    { regex: /only\s+pair\s+(\([a-d]\)|[a-d])\s+is\s+(?:correct|right|matched)/i, group: 1 },
+    { regex: /correct\s+answer\s+is\s+([a-d])/i, group: 1 }
+  ];
+
+  for (const p of patterns) {
+    const match = q.solution.match(p.regex);
+    if (match && match[p.group]) {
+      const letter = match[p.group].replace(/[()]/g, "").trim().toUpperCase();
+      let matchedIdx = -1;
+      if (letter === "A") matchedIdx = 0;
+      else if (letter === "B") matchedIdx = 1;
+      else if (letter === "C") matchedIdx = 2;
+      else if (letter === "D") matchedIdx = 3;
+
+      if (matchedIdx !== -1 && matchedIdx !== q.correctOptionIndex) {
+        return {
+          ...q,
+          correctOptionIndex: matchedIdx
+        };
+      }
+    }
+  }
+
+  return q;
+}
+

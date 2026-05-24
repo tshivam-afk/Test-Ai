@@ -8,6 +8,7 @@ import SplashScreen from "./components/SplashScreen";
 import { getSampleTest } from "./data";
 import { getBiologyMarathonTest } from "./biology_data";
 import { Test, TestProgress } from "./types";
+import { healQuestionCorrectIndexFromExplanation } from "./lib/jsonHealer";
 
 const LOCAL_STORAGE_TESTS_KEY = "practice_companion_tests_v1";
 const LOCAL_STORAGE_PROGRESS_KEY = "practice_companion_progress_v1";
@@ -23,12 +24,17 @@ export default function App() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Run explanation key healing on all loaded questions to repair legacy mismatches
+          const healedParsed = parsed.map((t: any) => ({
+            ...t,
+            questions: t.questions ? t.questions.map((q: any) => healQuestionCorrectIndexFromExplanation(q)) : []
+          }));
           // Ensure Biology Marathon is included automatically
-          const hasBio = parsed.some((t: any) => t.id === "neet-biology-marathon-q91-180");
+          const hasBio = healedParsed.some((t: any) => t.id === "neet-biology-marathon-q91-180");
           if (!hasBio) {
-            return [getBiologyMarathonTest(), ...parsed];
+            return [getBiologyMarathonTest(), ...healedParsed];
           }
-          return parsed;
+          return healedParsed;
         }
       }
     } catch (e) {
