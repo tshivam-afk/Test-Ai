@@ -1,5 +1,11 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import {
+  getAuth,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import { getFirestore, doc, setDoc, deleteDoc, getDocs, collection, getDocFromServer } from "firebase/firestore";
 import firebaseConfig from "../../firebase-applet-config.json";
 import { Test, TestProgress, ExamHistoryItem } from "../types";
@@ -8,9 +14,14 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
-export const loginWithGoogle = async () => {
-  const provider = new GoogleAuthProvider();
-  return signInWithPopup(auth, provider);
+export const loginWithEmail = async (email: string, pass: string) => {
+  return signInWithEmailAndPassword(auth, email, pass);
+};
+
+export const registerWithEmail = async (email: string, pass: string, displayName: string) => {
+  const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+  await updateProfile(userCred.user, { displayName });
+  return userCred;
 };
 
 export const logout = async () => {

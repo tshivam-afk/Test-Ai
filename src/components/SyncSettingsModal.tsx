@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Cloud,
   CloudOff,
@@ -15,7 +15,8 @@ import {
 import { User } from "firebase/auth";
 import {
   auth,
-  loginWithGoogle,
+  loginWithEmail,
+  registerWithEmail,
   logout,
   deleteAllCloudData,
   fetchUserData,
@@ -56,6 +57,13 @@ export default function SyncSettingsModal({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showTroubleshoot, setShowTroubleshoot] = useState(false);
 
+  // Email/Password authenticating states
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
   const currentHost = typeof window !== "undefined" ? window.location.hostname : "your-app-domain.run.app";
 
   // Monitor Auth Changes
@@ -67,21 +75,54 @@ export default function SyncSettingsModal({
     return () => unsub();
   }, []);
 
-  const handleLogin = async () => {
+  const handleEmailAction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      setSyncMessage({ text: "Please fill in all blanks.", type: "error" });
+      return;
+    }
+    if (authMode === "register" && !displayName) {
+      setSyncMessage({ text: "Please specify a Display Name.", type: "error" });
+      return;
+    }
+
     try {
-      setAuthLoading(true);
+      setActionLoading(true);
       setSyncMessage(null);
-      const res = await loginWithGoogle();
+
+      let res;
+      if (authMode === "login") {
+        res = await loginWithEmail(email, password);
+        setSyncMessage({ text: `Logged in successfully as ${res.user.displayName || res.user.email}!`, type: "success" });
+      } else {
+        res = await registerWithEmail(email, password, displayName);
+        setSyncMessage({ text: "Success! Your new NEET Sync account is created and logged in.", type: "success" });
+      }
+
       if (res.user) {
-        setSyncMessage({ text: "Logged in successfully!", type: "success" });
-        // After log in, fetch cloud data and trigger auto-sync
+        // Clear inputs on success
+        setEmail("");
+        setPassword("");
+        setDisplayName("");
         await handlePullAndMergeCloud(res.user.uid);
       }
     } catch (e: any) {
       console.error(e);
-      setSyncMessage({ text: e.message || "Failed to log in with Google.", type: "error" });
+      let errMsg = e.message || "An authenticating error occurred.";
+      if (e.code === "auth/invalid-credential" || e.code === "auth/wrong-password") {
+        errMsg = "Incorrect password or email. Please verify and try again.";
+      } else if (e.code === "auth/user-not-found") {
+        errMsg = "No account exists under this email address. Try Registering!";
+      } else if (e.code === "auth/email-already-in-use") {
+        errMsg = "An account under this email already exists. Please Sign In!";
+      } else if (e.code === "auth/weak-password") {
+        errMsg = "Password should be at least 6 characters long.";
+      } else if (e.code === "auth/invalid-email") {
+        errMsg = "Please provide a valid email format.";
+      }
+      setSyncMessage({ text: errMsg, type: "error" });
     } finally {
-      setAuthLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -301,67 +342,120 @@ export default function SyncSettingsModal({
               <p className="text-xs text-slate-400 dark:text-zinc-500">Connecting to secure account systems...</p>
             </div>
           ) : !currentUser ? (
-            /* Locked state / Login flow options */
-            <div id="auth-logged-out-section" className="space-y-4 text-center py-4">
-              <div className="mx-auto w-12 h-12 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-slate-200 dark:border-zinc-800 flex items-center justify-center mb-1">
-                <CloudOff className="w-6 h-6 text-slate-400 dark:text-zinc-500" />
+            /* Tabbed Email/Password Register-Login flows */
+            <div id="auth-credential-section" className="space-y-4 text-left">
+              <div className="mx-auto w-12 h-12 bg-indigo-50 dark:bg-indigo-950/30 rounded-2xl border border-dashed border-indigo-200 dark:border-indigo-900/50 flex items-center justify-center mb-2">
+                <CloudLightning className="w-6 h-6 text-indigo-500 animate-pulse" />
               </div>
-              <div>
-                <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-200">Sync is Offline</h4>
-                <p className="text-[11px] text-slate-450 dark:text-zinc-500 mt-1.5 max-w-[280px] mx-auto leading-relaxed">
-                  Log in to secure your mock practice records, OMR answers, customized notes, and progress markers across different browsers or platforms.
+              <div className="text-center">
+                <h4 className="font-extrabold text-sm text-slate-850 dark:text-zinc-150">Cloud Synchronization System</h4>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1 max-w-[280px] mx-auto leading-relaxed">
+                  Avoid browser popup limits and save your full study worksheets and timers safely across any browser or device.
                 </p>
               </div>
 
-              {/* Secure Styled Google Login Trigger Button */}
-              <button
-                id="google-signin-action"
-                onClick={handleLogin}
-                className="w-full mt-3 py-3 border border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 bg-slate-50 dark:bg-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-800 dark:text-zinc-100 rounded-2xl flex items-center justify-center gap-3 transition-all cursor-pointer font-bold text-xs shadow-xs"
-              >
-                {/* Visual Google Logo G representation via elegant paths */}
-                <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12.24 10.285V14.4h6.887c-.275 1.565-1.88 4.604-6.887 4.604-4.33 0-7.859-3.579-7.859-7.996s3.53-7.996 7.86-7.996c2.46 0 4.11 1.025 5.05 1.926l3.24-3.121C18.3 1.938 15.53 1 12.24 1 5.92 1 1 5.93 1 12s4.92 11 11.24 11c6.6 0 11-4.63 11-11.19 0-.75-.08-1.32-.2-1.81h-10.8z"
-                  />
-                </svg>
-                Continue with Google Account
-              </button>
-
-              {/* Troubleshooting Drawer Section */}
-              <div className="mt-3 text-left">
+              {/* Selector Tabs for Login vs Register */}
+              <div className="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-zinc-900/60 p-1 rounded-2xl border border-slate-100 dark:border-zinc-800/80 mt-4 select-none">
                 <button
-                  id="toggle-troubleshoot-btn"
-                  onClick={() => setShowTroubleshoot(!showTroubleshoot)}
-                  className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 mx-auto w-full justify-center transition-all focus:outline-none cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("login");
+                    setSyncMessage(null);
+                  }}
+                  className={`py-2 text-xs font-bold rounded-xl transition-all ${
+                    authMode === "login"
+                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                      : "text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-350 cursor-pointer"
+                  }`}
                 >
-                  <span>Troubleshoot Google Sign-in Issues</span>
-                  <span>{showTroubleshoot ? "▲" : "▼"}</span>
+                  Sign In
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode("register");
+                    setSyncMessage(null);
+                  }}
+                  className={`py-2 text-xs font-bold rounded-xl transition-all ${
+                    authMode === "register"
+                      ? "bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                      : "text-slate-450 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-350 cursor-pointer"
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
 
-                {showTroubleshoot && (
-                  <div className="mt-3.5 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 space-y-3 text-xs text-slate-600 dark:text-zinc-400 animate-slide-up">
-                    <p className="font-extrabold text-slate-800 dark:text-zinc-200 text-[11px] uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-150 dark:border-zinc-800/80 pb-2">
-                      <AlertCircle className="w-4 h-4 text-amber-500" />
-                      Fixing 'Action is Invalid' Error
-                    </p>
-                    <ol className="list-decimal list-inside space-y-2 text-[11.5px] leading-relaxed text-left">
-                      <li>
-                        <strong>Enable Google Provider</strong>: Go to your <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 underline font-semibold">Firebase Console</a>, open <strong>Authentication &gt; Sign-In Method</strong>, click <strong>Google</strong>, set to <strong>Enable</strong>, select a support email, and click <strong>Save</strong>.
-                      </li>
-                      <li>
-                        <strong>Authorize App Domain</strong>: In Firebase Authentication under <strong>Settings &gt; Authorized domains</strong>, click <strong>Add domain</strong> and enter:
-                        <div className="mt-1.5 p-2 bg-white dark:bg-zinc-950 rounded-lg border border-slate-100 dark:border-zinc-900/60 font-mono text-[10px] select-all break-all text-indigo-600 dark:text-indigo-400">
-                          {currentHost}
-                        </div>
-                      </li>
-                      <li>
-                        <strong>Try Direct Tab Page</strong>: In some sandboxed iframe previews, popups are restricted. Click the <strong>Open in New Tab</strong> icon in the upper-right corner of AI Studio to bypass cookies sandboxing.
-                      </li>
-                    </ol>
+              {/* Input Forms */}
+              <form onSubmit={handleEmailAction} className="space-y-3 mt-3 animate-fade-in">
+                {authMode === "register" && (
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
+                      Your Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ramesh Kumar"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
+                    />
                   </div>
                 )}
+
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-zinc-550 uppercase mb-1 tracking-wider">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full text-xs p-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-slate-850 dark:text-zinc-150 focus:border-indigo-500/55 focus:outline-none transition-all shadow-xs"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={actionLoading}
+                  className="w-full py-2.5 mt-2 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl font-extrabold text-xs tracking-wide transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : authMode === "login" ? (
+                    "Authorize & Sign In"
+                  ) : (
+                    "Register & Enable Sync"
+                  )}
+                </button>
+              </form>
+
+              {/* Direct email guidance summary footer note */}
+              <div className="bg-slate-50 dark:bg-zinc-900 border border-slate-150 dark:border-zinc-850/80 rounded-2xl p-3.5 mt-2 space-y-1 text-slate-500 dark:text-zinc-450">
+                <p className="font-extrabold text-slate-700 dark:text-zinc-300 text-[10px] uppercase tracking-wider flex items-center gap-1">
+                  <Database className="w-3.5 h-3.5 text-indigo-500" />
+                  No Browser Popups Needed
+                </p>
+                <p className="text-[10.5px] leading-relaxed">
+                  Because this uses native credentials directly, it is immune to iframe blockages, cookies restriction, or popups policy blockers. Your passwords/emails are encrypted safely by Google Firebase authentication.
+                </p>
               </div>
             </div>
           ) : (
