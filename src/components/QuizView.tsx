@@ -538,7 +538,7 @@ export default function QuizView({
 
             {/* Question Text with support for custom workspace scrolling */}
             <div id="question-text-field" className="bg-white dark:bg-[#18181b] p-5 shadow-xs rounded-2xl border border-slate-200 dark:border-zinc-800/80">
-              <p className={`text-slate-905 dark:text-zinc-50 leading-relaxed whitespace-pre-line tracking-wide ${
+              <p className={`text-slate-900 dark:text-zinc-50 leading-relaxed whitespace-pre-line tracking-wide ${
                 fontSize === "lg" ? "text-lg font-bold" : fontSize === "base" ? "text-base font-semibold" : "text-sm font-medium"
               }`}>
                 {currentQuestion.questionText}
@@ -569,7 +569,7 @@ export default function QuizView({
                 } else if (practiceMode === "exam") {
                   if (isSelected) {
                     optionStyleClass =
-                      "border-indigo-505 dark:border-indigo-600 bg-indigo-500/10 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm ring-2 ring-indigo-500/20";
+                      "border-indigo-500 dark:border-indigo-600 bg-indigo-500/10 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm ring-2 ring-indigo-500/20";
                   }
                 }
 
@@ -597,13 +597,13 @@ export default function QuizView({
 
             {/* Metacognitive Confidence Rating Selection */}
             {answers[currentQuestion.number] !== undefined && (
-              <div className="bg-slate-50/50 dark:bg-zinc-900/60 border border-slate-150 dark:border-zinc-800 p-3 rounded-2xl space-y-2 select-none animate-slide-up duration-150">
-                <span className="text-[10px] text-slate-400 dark:text-zinc-550 font-extrabold uppercase tracking-wide block font-mono">
+              <div className="bg-slate-50/50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800 p-3 rounded-2xl space-y-2 select-none animate-slide-up duration-150">
+                <span className="text-[10px] text-slate-400 dark:text-zinc-500 font-extrabold uppercase tracking-wide block font-mono">
                   🧠 Student surety level in this answer?
                 </span>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { key: "sure", label: "✅ 100% Sure", accent: "bg-emerald-500/10 text-emerald-650 border-emerald-500/30 dark:text-emerald-450" },
+                    { key: "sure", label: "✅ 100% Sure", accent: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:text-emerald-400" },
                     { key: "guess", label: "🤔 50/50 Guess", accent: "bg-amber-500/10 text-amber-600 border-amber-500/30 dark:text-amber-400" },
                     { key: "doubt", label: "💀 Blind/Doubt", accent: "bg-purple-500/10 text-purple-600 border-purple-500/30 dark:text-purple-400" },
                   ].map((lvl) => {
@@ -616,7 +616,7 @@ export default function QuizView({
                         className={`py-2 px-1 rounded-xl text-[10px] font-bold border transition-all text-center cursor-pointer ${
                           isSelected
                             ? `${lvl.accent} ring-1 ring-offset-1 dark:ring-offset-[#121214] ring-indigo-500`
-                            : "border-slate-205 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-500 dark:text-zinc-400"
+                            : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-[#121214] text-slate-500 dark:text-zinc-400"
                         }`}
                       >
                         {lvl.label}
@@ -629,7 +629,7 @@ export default function QuizView({
 
             {/* Instant Mode indicator widget */}
             {practiceMode === "study" && answers[currentQuestion.number] === undefined && (
-              <div className="rounded-xl bg-indigo-500/5 dark:bg-indigo-950/15 p-3 flex items-start gap-2 border border-indigo-150/40 dark:border-indigo-950/40 text-[11px] text-indigo-600 dark:text-indigo-400">
+              <div className="rounded-xl bg-indigo-500/5 dark:bg-indigo-950/15 p-3 flex items-start gap-2 border border-indigo-200/40 dark:border-indigo-950/40 text-[11px] text-indigo-600 dark:text-indigo-400">
                 <Info className="w-4 h-4 shrink-0 mt-0.5 text-indigo-500 animate-pulse" />
                 <p className="leading-normal">
                   You are in <strong>Study Mode</strong>. Selecting any option instantly checks consistency & expands the corresponding analytical steps slide.
@@ -660,7 +660,7 @@ export default function QuizView({
               <button
                 id="scratchpad-opener"
                 onClick={() => setScratchPadOpen(!scratchPadOpen)}
-                className="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-[#121214] hover:bg-slate-150 active:bg-slate-200 dark:hover:bg-zinc-800 transition-colors duration-150 flex items-center gap-1.5 text-xs font-bold text-slate-705 dark:text-zinc-300 cursor-pointer border border-slate-250/20 dark:border-zinc-800/80"
+                className="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-[#121214] hover:bg-slate-200 active:bg-slate-250 dark:hover:bg-zinc-800 transition-colors duration-150 flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer border border-slate-200/20 dark:border-zinc-800"
               >
                 <PenSquare className="w-4 h-4 text-indigo-400" />
                 <span>{scratchPadOpen ? "Fold Workspace Scratchpad" : "Open Workspace Scratchpad"}</span>
@@ -706,7 +706,7 @@ export default function QuizView({
               <button
                 id="close-omr-btn"
                 onClick={() => setOmrOpen(false)}
-                className="text-slate-455 cursor-pointer hover:text-indigo-400 text-xs font-semibold"
+                className="text-slate-400 cursor-pointer hover:text-indigo-400 text-xs font-semibold"
               >
                 Close Map
               </button>
@@ -719,7 +719,7 @@ export default function QuizView({
                 <span className="text-slate-600 dark:text-zinc-400">Answered ({answeredCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-slate-205 dark:bg-zinc-700" />
+                <span className="w-2.5 h-2.5 rounded-full bg-slate-200 dark:bg-zinc-700" />
                 <span className="text-slate-600 dark:text-zinc-400">Blank ({totalCount - answeredCount})</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -749,7 +749,7 @@ export default function QuizView({
                     className={`flex-1 py-1 rounded-md border text-center transition-all cursor-pointer ${
                       omrFilter === tab.key
                         ? "bg-indigo-500 text-white border-indigo-500 shadow-xs"
-                        : "bg-slate-50 dark:bg-zinc-900 border-slate-205 dark:border-zinc-805 text-slate-500 dark:text-zinc-400"
+                        : "bg-slate-50 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400"
                     }`}
                   >
                     {tab.label}
@@ -782,7 +782,7 @@ export default function QuizView({
                   } else if (isFlg) {
                     numBoxClass = "border-amber-400 bg-amber-50/10 text-amber-500 font-bold";
                   } else if (isBkm) {
-                    numBoxClass = "border-indigo-400 bg-indigo-50/10 text-indigo-550 font-bold";
+                    numBoxClass = "border-indigo-400 bg-indigo-50/10 text-indigo-600 font-bold";
                   } else if (hasAns) {
                     numBoxClass = "border-indigo-100 bg-indigo-600 text-white font-bold";
                   }
@@ -824,8 +824,8 @@ export default function QuizView({
             onClick={handlePrev}
             className={`px-4 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 cursor-pointer transition-colors ${
               activeIdx === 0
-                ? "border-slate-100 text-slate-350 dark:border-zinc-800 dark:text-zinc-700"
-                : "border-slate-205 text-slate-700 dark:border-zinc-750 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
+                ? "border-slate-100 text-slate-300 dark:border-zinc-800 dark:text-zinc-700"
+                : "border-slate-200 text-slate-700 dark:border-zinc-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800"
             }`}
           >
             Prev

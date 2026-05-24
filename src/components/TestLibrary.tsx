@@ -111,7 +111,7 @@ export default function TestLibrary({
 
       {/* Search and control bar */}
       <div id="search-bar" className="flex items-center gap-2 mb-4">
-        <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-zinc-850 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
+        <div className="flex-1 bg-white dark:bg-[#18181b] rounded-2xl border border-slate-100 dark:border-zinc-800 p-2.5 flex items-center gap-2 shadow-xs focus-within:border-indigo-500/50 transition-all">
           <Search className="w-4 h-4 text-slate-400" />
           <input
             id="test-search-field"
@@ -134,7 +134,7 @@ export default function TestLibrary({
       </div>
 
       {/* High-Yield Biology Exclusive practicing panel (Q91-Q180) */}
-      <div id="biology-yield-pnl" className="mb-5 p-4 rounded-3xl bg-gradient-to-br from-indigo-900/10 via-indigo-950/5 to-purple-900/5 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-150/40 dark:border-indigo-950/40 shadow-xs relative overflow-hidden flex flex-col justify-between">
+      <div id="biology-yield-pnl" className="mb-5 p-4 rounded-3xl bg-gradient-to-br from-indigo-900/10 via-indigo-950/5 to-purple-900/5 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-200/40 dark:border-indigo-950/40 shadow-xs relative overflow-hidden flex flex-col justify-between">
         <div className="absolute top-0 right-0 p-3 text-3xl opacity-15 select-none pointer-events-none">
           🧬
         </div>
@@ -154,7 +154,7 @@ export default function TestLibrary({
             <h4 className="font-extrabold text-sm text-slate-800 dark:text-zinc-100 mt-1.5 tracking-tight">
               NEET Biology Section Practice
             </h4>
-            <p className="text-[11px] text-slate-505 dark:text-zinc-450 leading-normal mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 leading-normal mt-0.5">
               Practice 90 high-yield botanical & physiological questions specifically mapped to index sequence <strong>Q91 - Q180</strong>.
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function TestLibrary({
             id="empty-library-state"
             className="flex flex-col items-center justify-center py-12 px-6 bg-white dark:bg-[#18181b] rounded-3xl border border-dashed border-slate-200 dark:border-zinc-800 transition-colors text-center"
           >
-            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-855 flex items-center justify-center mb-3">
+            <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-800 flex items-center justify-center mb-3">
               <FileText className="w-5 h-5 text-slate-400" />
             </div>
             <p className="text-sm font-bold text-slate-800 dark:text-zinc-200">
@@ -219,7 +219,7 @@ export default function TestLibrary({
                         </span>
                       )}
                     </div>
-                    <h4 className="font-bold text-sm text-slate-905 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-zinc-100 tracking-tight leading-snug line-clamp-2">
                       {test.title}
                     </h4>
                   </div>
@@ -234,7 +234,7 @@ export default function TestLibrary({
                           onDeleteTest(test.id);
                         }
                       }}
-                      className="p-1.5 text-slate-400 hover:text-red-505 dark:text-zinc-650 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-red-500 dark:text-zinc-500 dark:hover:text-red-400 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-lg transition-colors cursor-pointer"
                       aria-label="Delete test paper"
                     >
                       <Trash2 className="w-3.8 h-3.8" />
@@ -243,7 +243,7 @@ export default function TestLibrary({
                 </div>
 
                 {/* Progress Indicators */}
-                <div className="flex items-center justify-between text-[11px] text-slate-505 dark:text-zinc-500 mb-2 mt-auto">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-zinc-500 mb-2 mt-auto">
                   <span>
                     {isCompleted
                       ? "Test Reviewed"
