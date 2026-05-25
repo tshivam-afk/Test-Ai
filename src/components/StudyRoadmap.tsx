@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import FlashcardArena from "./FlashcardArena";
+import SyllabusTracker from "./SyllabusTracker";
 import {
   TrendingUp,
   Award,
@@ -31,6 +33,7 @@ interface StudyRoadmapProps {
 
 export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoadmapProps) {
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
+  const [roadmapTab, setRoadmapTab] = useState<"analytics" | "flashcards" | "syllabus">("analytics");
 
   // 1. Calculate and compile chart data for each test/workbook that has at least 1 attempt
   const chartData = useMemo(() => {
@@ -189,7 +192,47 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
         </h2>
       </div>
 
-      {/* Aggregate Score summary cards */}
+      {/* Roadmap Sub-tabs bar */}
+      <div className="flex border border-slate-150 dark:border-zinc-800 p-0.5 bg-slate-50 dark:bg-zinc-950/40 rounded-xl select-none">
+        <button
+          onClick={() => setRoadmapTab("analytics")}
+          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+            roadmapTab === "analytics"
+              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
+              : "text-slate-400 hover:text-slate-500"
+          }`}
+        >
+          📊 Analytics Matrix
+        </button>
+        <button
+          onClick={() => setRoadmapTab("flashcards")}
+          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+            roadmapTab === "flashcards"
+              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
+              : "text-slate-400 hover:text-slate-500"
+          }`}
+        >
+          🎴 Active Recall Deck
+        </button>
+        <button
+          onClick={() => setRoadmapTab("syllabus")}
+          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+            roadmapTab === "syllabus"
+              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
+              : "text-slate-400 hover:text-slate-500"
+          }`}
+        >
+          📋 NCERT Prep Radar
+        </button>
+      </div>
+
+      {roadmapTab === "flashcards" ? (
+        <FlashcardArena />
+      ) : roadmapTab === "syllabus" ? (
+        <SyllabusTracker />
+      ) : (
+        <>
+          {/* Aggregate Score summary cards */}
       <div id="stats-summary-grid" className="grid grid-cols-2 gap-3">
         <div className="bg-white dark:bg-[#121214] border border-slate-150 dark:border-zinc-800/80 rounded-2xl p-3 flex items-center space-x-3.5 shadow-xs">
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
@@ -422,6 +465,8 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
             })}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

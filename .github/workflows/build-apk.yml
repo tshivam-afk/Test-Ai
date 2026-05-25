@@ -24,6 +24,8 @@ jobs:
   build:
     name: Build & Sign Android Application
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout Code Repository
@@ -95,8 +97,22 @@ jobs:
         run: |
           # 1. Generate or Restore Keystore
           if [ -z "$SIGNING_KEY" ]; then
-            echo "No ANDROID_SIGNING_KEY secret found. Generating temporary self-signed keystore..."
-            keytool -genkeypair -v -keystore temp.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey -storepass temppassword -keypass temppassword -dname "CN=Lumen, O=Lumen Prep, C=US"
+            echo "No ANDROID_SIGNING_KEY secret found. Checking for persistent temporary repository keystore..."
+            if [ -f android-release-temp-key.jks ]; then
+              echo "Persistent temporary keystore found. Reusing it to ensure matching signature."
+              cp android-release-temp-key.jks temp.jks
+            else
+              echo "No persistent keystore found in repo. Generating a new one and committing it back..."
+              keytool -genkeypair -v -keystore android-release-temp-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias mykey -storepass temppassword -keypass temppassword -dname "CN=Lumen, O=Lumen Prep, C=US"
+              cp android-release-temp-key.jks temp.jks
+              
+              # Commit and push key back to repository so subsequent runs use the exact same key
+              git config --global user.name "github-actions[bot]"
+              git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add android-release-temp-key.jks
+              git commit -m "chore: persist temporary Android signing key [skip ci]" || echo "No changes to commit"
+              git push || echo "Warning: failed to push key (might lack write permissions in repository settings). The build will complete, but future builds might generate new keys if the key is not pushed."
+            fi
             STORE_PASS="temppassword"
             KEY_PASS="temppassword"
             ALIAS="mykey"
