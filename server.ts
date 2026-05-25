@@ -139,6 +139,72 @@ Extract up to 35-50 questions in sequence starting from the first page. Keep ext
   }
 });
 
+// REST route to dynamically generate real-time scientific/mathematical mnemonics
+app.post("/api/generate-mnemonic", async (req, res) => {
+  try {
+    const { subject, topic } = req.body;
+    if (!topic) {
+      return res.status(400).json({ error: "Missing topic name or scientific terms to construct mnemonic." });
+    }
+
+    const ai = getGenAIClient();
+    const promptText = `
+You are an expert high-yield NEET educational memory coach and study tutor. Your task is to generate a memorable, highly illustrative, and easy-to-remember mnemonic name, phrase, map list, and academic explanation for a user-specified topic.
+
+Subject: ${subject || "General Science / NEET Preparation"}
+Topic to remember: "${topic}"
+
+Provide:
+1. "topicTitle": A clean, concise title for this topic.
+2. "mnemonic": The literal list of items/symbols/letters to remember in order.
+3. "phrase": A catchy, memorable phrase (an acronym or phrase mnemonic, e.g., "Keep Ponds Clean Or Frogs Get Sick" for Kingdom, Phylum, Class, Order, Family, Genus, Species).
+4. "mapping": An array of objects showing how each letter/word of the mnemonic phrase maps to the target science concept element. Each object has "key" (the letter or word) and "standsFor" (the scientific term/concept).
+5. "explanation": A helpful, friendly 2-3 sentence overview explaining how this formula/concept works and why it is a critical high-yield point for exams.
+
+Return a structurally clean JSON matching the requested responseSchema. Avoid any extra markdown code formatting wrappers outside the raw JSON.
+`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: [promptText],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            topicTitle: { type: Type.STRING },
+            mnemonic: { type: Type.STRING },
+            phrase: { type: Type.STRING },
+            mapping: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  key: { type: Type.STRING },
+                  standsFor: { type: Type.STRING },
+                },
+                required: ["key", "standsFor"],
+              }
+            },
+            explanation: { type: Type.STRING }
+          },
+          required: ["topicTitle", "mnemonic", "phrase", "mapping", "explanation"]
+        }
+      }
+    });
+
+    const outputText = response.text || "{}";
+    const dataResponse = JSON.parse(outputText);
+    return res.json({ success: true, data: dataResponse });
+  } catch (err: any) {
+    console.error("Critical mnemonic generation error:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || "Failed to generate mnemonic from Gemini.",
+    });
+  }
+});
+
 // Start routing and compile setup
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {

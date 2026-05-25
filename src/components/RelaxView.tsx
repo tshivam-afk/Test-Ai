@@ -187,13 +187,16 @@ export default function RelaxView() {
   // Mixer channels state
   const [channels, setChannels] = useState<MixerChannel[]>([
     { id: "rain", name: "Focus Ambient Rain", emoji: "🌧️", volume: 0.5, playing: false, desc: "Synthesized rain noise with organic bandpass warmth" },
-    { id: "fire", name: "Campfire Crackle", emoji: "🔥", volume: 0.5, playing: false, desc: "Deep dry logs wood-hiss with randomized clinical ember sparks" },
     { id: "ocean", name: "Ocean Tide Waves", emoji: "🌊", volume: 0.5, playing: false, desc: "Solfeggio-infused ocean swells modulated by slow lowpass LFOs" },
     { id: "bells", name: "Zen Wind Bells", emoji: "🎐", volume: 0.5, playing: false, desc: "Procedural pentatonic chimes looping soft note triggers" },
     { id: "forest", name: "Forest Birdsong", emoji: "🌳", volume: 0.5, playing: false, desc: "Gentle leaf whispers with organic procedural songbird chips" },
     { id: "binaural", name: "16Hz Beta Focus Beats", emoji: "🧠", volume: 0.5, playing: false, desc: "Binaural frequency to boost logic processing and exam speed focus" },
     { id: "solfeggio", name: "528Hz Solfeggio Repair", emoji: "✨", volume: 0.5, playing: false, desc: "The restorative frequency to lower physical stress and adrenaline" },
     { id: "wind", name: "Leaf Zephyr Wind", emoji: "🍃", volume: 0.5, playing: false, desc: "Organic mountain wind sweeping slowly through branch leaves" },
+    { id: "whitenoise", name: "Cozy Study Fan", emoji: "🔌", volume: 0.5, playing: false, desc: "Cozy constant mechanical hum of a desktop cooling fan" },
+    { id: "cosmic", name: "Deep Space Drone", emoji: "🌌", volume: 0.5, playing: false, desc: "Slower low frequencies blended and modulated for cosmic focus" },
+    { id: "library", name: "Library Paper Whispers", emoji: "📚", volume: 0.5, playing: false, desc: "Gentle book pages turning at random cozy study intervals" },
+    { id: "singingbowl", name: "Tibetan Singing Bowl", emoji: "🥣", volume: 0.5, playing: false, desc: "Primal hypnotic resonance of a beating singing bowl" },
   ]);
 
   // Guided breathing loop state
@@ -543,99 +546,154 @@ export default function RelaxView() {
       }, 70);
       channelTimersRef.current[channelId] = interval;
 
-    } else if (channelId === "fire") {
-      // 1. Low combustion wood rumble (brown noise)
-      const bufferSize = ctx.sampleRate * 2.5;
+    } else if (channelId === "whitenoise") {
+      // White noise filtered as a cozy desk fan humming
+      const bufferSize = ctx.sampleRate * 2.0;
       const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      let lastOut = 0.0;
+      const data = noiseBuffer.getChannelData(0);
       for (let i = 0; i < bufferSize; i++) {
-        const white = Math.random() * 2 - 1;
-        output[i] = (lastOut + (0.015 * white)) / 1.015;
-        lastOut = output[i];
-        output[i] *= 1.4;
+        data[i] = Math.random() * 2 - 1;
       }
-      const sourceRumble = ctx.createBufferSource();
-      sourceRumble.buffer = noiseBuffer;
-      sourceRumble.loop = true;
-      const lowFilter = ctx.createBiquadFilter();
-      lowFilter.type = "lowpass";
-      lowFilter.frequency.value = 110;
-      sourceRumble.connect(lowFilter);
-      lowFilter.connect(channelGain);
-      sourceRumble.start();
-      channelSourcesRef.current[channelId].push(sourceRumble, lowFilter);
+      const source = ctx.createBufferSource();
+      source.buffer = noiseBuffer;
+      source.loop = true;
 
-      // 2. Hot-gases sap hiss (bandpass white noise at 3.3kHz for continuous sizzling organic depth)
-      const hissBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const hissData = hissBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        hissData[i] = (Math.random() * 2 - 1) * 0.035;
-      }
-      const sourceHiss = ctx.createBufferSource();
-      sourceHiss.buffer = hissBuffer;
-      sourceHiss.loop = true;
-      const hissFilter = ctx.createBiquadFilter();
-      hissFilter.type = "bandpass";
-      hissFilter.frequency.value = 3300;
-      hissFilter.Q.value = 1.3;
-      const hissGain = ctx.createGain();
-      hissGain.gain.setValueAtTime(0.3, ctx.currentTime);
-      sourceHiss.connect(hissFilter);
-      hissFilter.connect(hissGain);
-      hissGain.connect(channelGain);
-      sourceHiss.start();
-      channelSourcesRef.current[channelId].push(sourceHiss, hissFilter, hissGain);
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass";
+      lowpass.frequency.value = 160;
 
-      // 3. Dry ember wood micro-crackles loop
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = "bandpass";
+      bandpass.frequency.value = 85;
+      bandpass.Q.value = 1.8;
+
+      source.connect(lowpass);
+      lowpass.connect(bandpass);
+      bandpass.connect(channelGain);
+      source.start();
+      channelSourcesRef.current[channelId].push(source, lowpass, bandpass);
+
+      // Spin speed/hum modulation simulator (LFO)
+      let fanState = 0;
+      const interval = setInterval(() => {
+        try {
+          if (bandpass && ctx.state !== "closed") {
+            fanState += 0.08;
+            bandpass.frequency.setValueAtTime(85 + Math.sin(fanState) * 4, ctx.currentTime);
+          }
+        } catch {}
+      }, 50);
+      channelTimersRef.current[channelId] = interval;
+
+    } else if (channelId === "cosmic") {
+      // Single interval controlling nested oscillating drone generators
+      const freqs = [72, 108, 144];
+      const oscs = freqs.map((freq) => {
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        const lowpass = ctx.createBiquadFilter();
+        lowpass.type = "lowpass";
+        lowpass.frequency.setValueAtTime(140, ctx.currentTime);
+
+        osc.connect(lowpass);
+        lowpass.connect(channelGain);
+        osc.start();
+
+        channelSourcesRef.current[channelId].push(osc, lowpass);
+        return osc;
+      });
+
+      let cosmicTime = 0;
       const interval = setInterval(() => {
         try {
           if (ctx.state === "closed") return;
-          
-          // Tiny frequent crackle pops
-          if (Math.random() > 0.32) {
-            const crackleOsc = ctx.createOscillator();
-            const crackleGain = ctx.createGain();
-            const crackleFilter = ctx.createBiquadFilter();
-            
-            crackleOsc.type = "triangle";
-            crackleOsc.frequency.setValueAtTime(1800 + Math.random() * 5500, ctx.currentTime);
-            
-            crackleFilter.type = "highpass";
-            crackleFilter.frequency.setValueAtTime(1500, ctx.currentTime);
-            
-            crackleGain.gain.setValueAtTime(0.15 + Math.random() * 0.45, ctx.currentTime);
-            crackleGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.003 + Math.random() * 0.007);
-            
-            crackleOsc.connect(crackleFilter);
-            crackleFilter.connect(crackleGain);
-            crackleGain.connect(channelGain);
-            
-            crackleOsc.start();
-            crackleOsc.stop(ctx.currentTime + 0.015);
-          }
-
-          // Louder exploding sap snaps (simulating dry timber splits)
-          if (Math.random() > 0.88) {
-            const snapBuffer = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.08), ctx.sampleRate);
-            const snapData = snapBuffer.getChannelData(0);
-            for (let i = 0; i < snapBuffer.length; i++) {
-              snapData[i] = (Math.random() * 2 - 1) * Math.exp(-i / 140);
-            }
-            const snapSource = ctx.createBufferSource();
-            snapSource.buffer = snapBuffer;
-            const snapFilter = ctx.createBiquadFilter();
-            snapFilter.type = "bandpass";
-            snapFilter.frequency.value = 900 + Math.random() * 2300;
-            const snapGain = ctx.createGain();
-            snapGain.gain.setValueAtTime(0.65 + Math.random() * 0.8, ctx.currentTime);
-            snapSource.connect(snapFilter);
-            snapFilter.connect(snapGain);
-            snapGain.connect(channelGain);
-            snapSource.start();
-          }
+          cosmicTime += 0.04;
+          oscs.forEach((osc, idx) => {
+            const base = freqs[idx];
+            osc.frequency.setValueAtTime(base + Math.sin(cosmicTime + idx) * 1.2, ctx.currentTime);
+          });
         } catch {}
       }, 100);
+      channelTimersRef.current[channelId] = interval;
+
+    } else if (channelId === "library") {
+      // 1. Light white noise background room tone
+      const toneOsc = ctx.createOscillator();
+      toneOsc.type = "sine";
+      toneOsc.frequency.setValueAtTime(55, ctx.currentTime); // low hum of library air conditioning
+      
+      const toneGain = ctx.createGain();
+      toneGain.gain.setValueAtTime(0.2, ctx.currentTime);
+      
+      toneOsc.connect(toneGain);
+      toneGain.connect(channelGain);
+      toneOsc.start();
+      channelSourcesRef.current[channelId].push(toneOsc, toneGain);
+
+      // 2. Randomized soft book page rustles
+      const interval = setInterval(() => {
+        try {
+          if (ctx.state === "closed") return;
+          if (Math.random() > 0.65) {
+            // Generate a rapid friction noise burst ~0.25 seconds
+            const bufLen = ctx.sampleRate * 0.25;
+            const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+            const data = buf.getChannelData(0);
+            for (let i = 0; i < bufLen; i++) {
+              data[i] = (Math.random() * 2 - 1) * Math.exp(-i / 800) * 0.12;
+            }
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            
+            const highpass = ctx.createBiquadFilter();
+            highpass.type = "highpass";
+            highpass.frequency.setValueAtTime(1200 + Math.random() * 1000, ctx.currentTime);
+
+            src.connect(highpass);
+            highpass.connect(channelGain);
+            src.start();
+          }
+        } catch {}
+      }, 1500);
+      channelTimersRef.current[channelId] = interval;
+
+    } else if (channelId === "singingbowl") {
+      // Standard deep resonant chime triggered on a loop
+      const triggerStrike = () => {
+        try {
+          if (ctx.state === "closed") return;
+          const baseFreq = 293.66; // D4, heart chakra focus
+          const harmonics = [1.0, 2.01, 3.02, 4.4];
+          const amplitudes = [0.65, 0.22, 0.11, 0.05];
+
+          harmonics.forEach((h, idx) => {
+            const osc = ctx.createOscillator();
+            const strikeGain = ctx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(baseFreq * h, ctx.currentTime);
+
+            strikeGain.gain.setValueAtTime(0, ctx.currentTime);
+            // Slow attack rise typical of wooden mallet sweep on singing bronze
+            strikeGain.gain.linearRampToValueAtTime(amplitudes[idx] * 0.4, ctx.currentTime + 0.15);
+            // Ultra-slow decay for sustained gong/bowl sound
+            strikeGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 3.8);
+
+            osc.connect(strikeGain);
+            strikeGain.connect(channelGain);
+            osc.start();
+            osc.stop(ctx.currentTime + 4.0);
+          });
+        } catch {}
+      };
+
+      // Periodic bowl swings
+      triggerStrike();
+      const interval = setInterval(() => {
+        triggerStrike();
+      }, 4200);
       channelTimersRef.current[channelId] = interval;
 
     } else if (channelId === "bells") {
@@ -902,7 +960,7 @@ export default function RelaxView() {
         } catch {}
       });
       // Clean mixer channles
-      ["rain", "fire", "ocean", "bells"].forEach((ch) => {
+      ["rain", "ocean", "bells", "forest", "binaural", "solfeggio", "wind", "whitenoise", "cosmic", "library", "singingbowl"].forEach((ch) => {
         if (channelTimersRef.current[ch]) clearInterval(channelTimersRef.current[ch]);
         if (channelSourcesRef.current[ch]) {
           channelSourcesRef.current[ch].forEach((src: any) => {

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import FlashcardArena from "./FlashcardArena";
 import SyllabusTracker from "./SyllabusTracker";
+import MnemonicVault from "./MnemonicVault";
 import {
   TrendingUp,
   Award,
@@ -33,7 +34,7 @@ interface StudyRoadmapProps {
 
 export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoadmapProps) {
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
-  const [roadmapTab, setRoadmapTab] = useState<"analytics" | "flashcards" | "syllabus">("analytics");
+  const [roadmapTab, setRoadmapTab] = useState<"analytics" | "flashcards" | "syllabus" | "mnemonics">("analytics");
 
   // 1. Calculate and compile chart data for each test/workbook that has at least 1 attempt
   const chartData = useMemo(() => {
@@ -196,7 +197,7 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
       <div className="flex border border-slate-150 dark:border-zinc-800 p-0.5 bg-slate-50 dark:bg-zinc-950/40 rounded-xl select-none">
         <button
           onClick={() => setRoadmapTab("analytics")}
-          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
             roadmapTab === "analytics"
               ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
               : "text-slate-400 hover:text-slate-500"
@@ -206,23 +207,33 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
         </button>
         <button
           onClick={() => setRoadmapTab("flashcards")}
-          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
             roadmapTab === "flashcards"
               ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
               : "text-slate-400 hover:text-slate-500"
           }`}
         >
-          🎴 Active Recall Deck
+          🎴 Recall Deck
         </button>
         <button
           onClick={() => setRoadmapTab("syllabus")}
-          className={`flex-1 py-1.8 text-center text-xs font-black transition-all rounded-lg cursor-pointer ${
+          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
             roadmapTab === "syllabus"
               ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
               : "text-slate-400 hover:text-slate-500"
           }`}
         >
-          📋 NCERT Prep Radar
+          📋 Prep Radar
+        </button>
+        <button
+          onClick={() => setRoadmapTab("mnemonics")}
+          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
+            roadmapTab === "mnemonics"
+              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
+              : "text-slate-400 hover:text-slate-500"
+          }`}
+        >
+          🧠 Mnemonic Vault
         </button>
       </div>
 
@@ -230,6 +241,8 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
         <FlashcardArena />
       ) : roadmapTab === "syllabus" ? (
         <SyllabusTracker />
+      ) : roadmapTab === "mnemonics" ? (
+        <MnemonicVault />
       ) : (
         <>
           {/* Aggregate Score summary cards */}
