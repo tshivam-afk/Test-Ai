@@ -37,20 +37,6 @@ import com.lumen.neetprep.models.TestProgress
 import kotlinx.coroutines.delay
 import java.util.*
 
-@Composable
-fun getThemeBg(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF0B0F19) else Color(0xFFF8FAFC)
-
-@Composable
-fun getThemeCardBg(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF151D30) else Color.White
-
-@Composable
-fun getThemeText(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFFF1F5F9) else Color(0xFF0F172A)
-
-@Composable
-fun getThemeSubText(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF94A3B8) else Color.Gray
-
-@Composable
-fun getThemeBorder(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF1F2930) else Color(0xFFE2E8F0)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
