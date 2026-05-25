@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Star/Sparkle Glow -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,24 L57,43 L76,46 L57,49 L54,68 L51,49 L32,46 L51,43 Z" />
+    <!-- Glowing Accent Inner Star -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M54,34 L55.5,43 L64,44.5 L55.5,46 L54,55 L52.5,46 L44,44.5 L52.5,43 Z" />
+    <!-- Book Base/Wings -->
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:pathData="M34,70 C44,65 54,68 54,70 C54,68 64,65 74,70" />
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:pathData="M34,76 C44,71 54,74 54,76 C54,74 64,71 74,76" />
+    <path
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:pathData="M54,70 L54,77" />
+</vector>
