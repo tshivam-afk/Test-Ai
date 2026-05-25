@@ -55,6 +55,13 @@ jobs:
             sed -i -E "s/(versionName\s*=\s*)\"[^\"]*\"/\1\"${{ github.event.inputs.version_name }}\"/" android/app/build.gradle.kts
           fi
 
+      - name: Download Gradle Wrapper JAR
+        run: |
+          cd android
+          mkdir -p gradle/wrapper
+          echo "Downloading official stable Gradle wrapper JAR..."
+          curl -L -f -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar
+
       - name: Grant Execute Permission to Gradlew
         run: |
           chmod +x android/gradlew
