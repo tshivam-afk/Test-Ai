@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   X,
   Download,
@@ -13,9 +13,24 @@ import {
   Copy,
   Check,
   ClipboardList,
-  Share2
+  Share2,
+  Cloud,
+  RefreshCw,
+  LogIn,
+  LogOut
 } from "lucide-react";
 import { Test, TestProgress, ExamHistoryItem } from "../types";
+import { User } from "firebase/auth";
+import {
+  googleSignIn,
+  logoutUser,
+  getCachedAccessToken,
+  initAuthListener,
+  findBackupFile,
+  downloadBackupContent,
+  uploadBackupContent,
+  auth
+} from "../lib/driveSync";
 
 interface SyncSettingsModalProps {
   onClose: () => void;
@@ -46,6 +61,161 @@ export default function SyncSettingsModal({
   const [copied, setCopied] = useState(false);
   const [pastedJsonText, setPastedJsonText] = useState("");
   const [showPasteArea, setShowPasteArea] = useState(false);
+
+  // Google Drive integrations state
+  const [driveUser, setDriveUser] = useState<User | null>(null);
+  const [driveToken, setDriveToken] = useState<string | null>(null);
+  const [isDriveLoading, setIsDriveLoading] = useState(false);
+  const [driveBackupId, setDriveBackupId] = useState<string | null>(null);
+  const [isDriveAuthed, setIsDriveAuthed] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = initAuthListener(
+      (user, token) => {
+        setDriveUser(user);
+        setDriveToken(token);
+        setIsDriveAuthed(true);
+      },
+      () => {
+        setDriveUser(null);
+        setDriveToken(null);
+        setIsDriveAuthed(false);
+      }
+    );
+    const cachedTok = getCachedAccessToken();
+    if (cachedTok && auth.currentUser) {
+      setDriveUser(auth.currentUser);
+      setDriveToken(cachedTok);
+      setIsDriveAuthed(true);
+    }
+    return () => unsubscribe();
+  }, []);
+
+  const handleDriveSignIn = async () => {
+    try {
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      setIsDriveLoading(true);
+      const res = await googleSignIn();
+      if (res) {
+        setDriveUser(res.user);
+        setDriveToken(res.accessToken);
+        setIsDriveAuthed(true);
+        setSuccessMsg(`Signed in as ${res.user.displayName || res.user.email} successfully! Accessing Drive with your permission.`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(`Google Sign-in failed: ${err.message || err}`);
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
+
+  const handleDriveSignOut = async () => {
+    try {
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      await logoutUser();
+      setDriveUser(null);
+      setDriveToken(null);
+      setIsDriveAuthed(false);
+      setDriveBackupId(null);
+      setSuccessMsg("Signed out from Google account.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(`Sign out failed: ${err.message || err}`);
+    }
+  };
+
+  const handleBackupToDrive = async () => {
+    const token = driveToken || getCachedAccessToken();
+    if (!token) {
+      setErrorMsg("Please Sign In with Google first to authorize Drive backup.");
+      return;
+    }
+
+    try {
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      setIsDriveLoading(true);
+
+      const confirmed = window.confirm(
+        "Are you sure you want to write your current local workspace backup (tests, progress, logs) to Google Drive? This will create or update 'neet_prep_workspace_backup.json' in your drive storage with your permission."
+      );
+      if (!confirmed) return;
+
+      const dataToBackup = {
+        app: "NEET PREP COMPANION",
+        version: "1.0.0",
+        backupTimestamp: new Date().toISOString(),
+        workbooks: tests,
+        progress,
+        history: examHistory,
+      };
+
+      // 1. Find if a file already exists
+      const existingId = await findBackupFile(token);
+      
+      // 2. Upload / update content
+      const fileId = await uploadBackupContent(token, dataToBackup, existingId);
+      setDriveBackupId(fileId);
+      setSuccessMsg("Manual Cloud Backup to your Google Drive completed successfully! Your data is saved safely in 'neet_prep_workspace_backup.json'.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(`Drive backup failed: ${err.message || err}`);
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
+
+  const handleRestoreFromDrive = async () => {
+    const token = driveToken || getCachedAccessToken();
+    if (!token) {
+      setErrorMsg("Please Sign In with Google first to authorize Drive restore.");
+      return;
+    }
+
+    try {
+      setSuccessMsg(null);
+      setErrorMsg(null);
+      setIsDriveLoading(true);
+
+      // 1. Search for file in drive
+      const fileId = await findBackupFile(token);
+      if (!fileId) {
+        setErrorMsg("No prior backup named 'neet_prep_workspace_backup.json' was found in your Google Drive. Tap 'Backup to Google Drive' first to save one.");
+        return;
+      }
+
+      // 2. Download content
+      const content = await downloadBackupContent(token, fileId);
+      if (!content || typeof content !== "object") {
+        throw new Error("Invalid or corrupted backup content retrieved from Google Drive.");
+      }
+
+      const importedWorkbooks = Array.isArray(content.workbooks) ? content.workbooks : [];
+      const importedProgress = content.progress && typeof content.progress === "object" ? content.progress : {};
+      const importedHistory = Array.isArray(content.history) ? content.history : [];
+
+      if (importedWorkbooks.length === 0 && Object.keys(importedProgress).length === 0 && importedHistory.length === 0) {
+        throw new Error("The backup file retrieved from Google Drive contains no valid data.");
+      }
+
+      setParsedBackup({
+        workbooks: importedWorkbooks,
+        progress: importedProgress,
+        history: importedHistory,
+      });
+      setParsedFilename("Google Drive Cloud Archive");
+      setDriveBackupId(fileId);
+      setSuccessMsg("Successfully fetched background archive from your Google Drive! Choose an import mode below to restore.");
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(`Drive restore failed: ${err.message || err}`);
+    } finally {
+      setIsDriveLoading(false);
+    }
+  };
 
   // Read-in backup state
   const [parsedBackup, setParsedBackup] = useState<{
@@ -646,6 +816,96 @@ export default function SyncSettingsModal({
                     className="w-full py-1 text-[11px] font-semibold text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 cursor-pointer"
                   >
                     Cancel / Pick Another File
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Google Drive Synchronization (User Requested) */}
+          <div className="bg-white dark:bg-zinc-900/30 border border-slate-150 dark:border-zinc-800 rounded-2xl p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-extrabold text-slate-800 dark:text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+                  <Cloud className="w-4 h-4 text-indigo-500" />
+                  Google Drive Cloud Sync
+                </h4>
+                <p className="text-[11px] text-slate-450 dark:text-zinc-500 mt-0.5 leading-relaxed">
+                  Backup your materials directly and retrieve them manually across devices.
+                </p>
+              </div>
+            </div>
+
+            {!isDriveAuthed ? (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleDriveSignIn}
+                  disabled={isDriveLoading}
+                  className="w-full flex items-center justify-center gap-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-850 disabled:opacity-50 px-4 py-2.5 rounded-xl text-xs font-extrabold text-slate-700 dark:text-zinc-200 shadow-xs cursor-pointer transition-colors"
+                >
+                  {isDriveLoading ? (
+                    <RefreshCw className="w-4.5 h-4.5 animate-spin text-indigo-500" />
+                  ) : (
+                    <svg className="w-4 h-4 shrink-0 animate-pulse" viewBox="0 0 48 48">
+                      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                    </svg>
+                  )}
+                  <span>{isDriveLoading ? "Authorizing Security..." : "Sign in with Google"}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 animate-fade-in">
+                <div className="bg-slate-50 dark:bg-zinc-950 p-2.5 rounded-xl border border-slate-100 dark:border-zinc-850 flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400">
+                  <div className="flex items-center gap-2 truncate">
+                    {driveUser?.photoURL ? (
+                      <img src={driveUser.photoURL} alt={driveUser.displayName || "User"} className="w-5.5 h-5.5 rounded-full" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-5.5 h-5.5 bg-indigo-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                        {(driveUser?.displayName || driveUser?.email || "U")[0].toUpperCase()}
+                      </div>
+                    )}
+                    <span className="truncate text-[11px] font-semibold text-slate-700 dark:text-zinc-300">
+                      {driveUser?.displayName || driveUser?.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleDriveSignOut}
+                    className="text-[10px] text-rose-500 hover:underline font-bold flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleBackupToDrive}
+                    disabled={isDriveLoading}
+                    className="py-2.5 bg-indigo-600 hover:bg-indigo-550 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {isDriveLoading ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Upload className="w-3.5 h-3.5" />
+                    )}
+                    <span>Backup to Drive</span>
+                  </button>
+
+                  <button
+                    onClick={handleRestoreFromDrive}
+                    disabled={isDriveLoading}
+                    className="py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-880 dark:hover:bg-zinc-750 text-slate-800 dark:text-zinc-100 rounded-xl text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 border border-slate-200 dark:border-zinc-800"
+                  >
+                    {isDriveLoading ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5" />
+                    )}
+                    <span>Restore from Drive</span>
                   </button>
                 </div>
               </div>

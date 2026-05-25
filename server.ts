@@ -149,17 +149,18 @@ app.post("/api/generate-mnemonic", async (req, res) => {
 
     const ai = getGenAIClient();
     const promptText = `
-You are an expert high-yield NEET educational memory coach and study tutor. Your task is to generate a memorable, highly illustrative, and easy-to-remember mnemonic name, phrase, map list, and academic explanation for a user-specified topic.
+You are an expert high-yield NEET educational memory coach and study tutor. Your primary command is to generate a highly detailed and concepts-first mnemonic package. The user needs to learn and recall the ACTUAL sequence, chronological order, or physical concept, not just memorize random letters.
 
 Subject: ${subject || "General Science / NEET Preparation"}
 Topic to remember: "${topic}"
 
-Provide:
-1. "topicTitle": A clean, concise title for this topic.
+State clearly:
+1. "topicTitle": A clean, descriptive title for this topic.
 2. "mnemonic": The literal list of items/symbols/letters to remember in order.
-3. "phrase": A catchy, memorable phrase (an acronym or phrase mnemonic, e.g., "Keep Ponds Clean Or Frogs Get Sick" for Kingdom, Phylum, Class, Order, Family, Genus, Species).
-4. "mapping": An array of objects showing how each letter/word of the mnemonic phrase maps to the target science concept element. Each object has "key" (the letter or word) and "standsFor" (the scientific term/concept).
-5. "explanation": A helpful, friendly 2-3 sentence overview explaining how this formula/concept works and why it is a critical high-yield point for exams.
+3. "phrase": A catchy, memorable phrase (an acronym or phrase mnemonic, e.g., "Keep Ponds Clean Or Frogs Get Sick").
+4. "mapping": An array of objects showing how each letter/word of the mnemonic phrase maps to the target science concept element.
+   CRITICAL REQUIREMENT: The "standsFor" value MUST include both (a) the correct name of the scientific term/concept, AND (b) a concise explanation or description of what that term/concept is, its function, or how it acts in the sequence (e.g., "Prophase - chromatin condenses and chromosomes become visible", or "Lithium (Li) - Group 1 alkali metal, stores charge dynamically"). Do NOT just return single words.
+5. "explanation": A comprehensive, step-by-step educational breakdown of the chemical/biological process, mathematical formula, physical law, or sequence. Explain the real concept in full detail, highlighting the physical mechanisms, the exact chronological order, and why this is highly tested in competitive exams. Provide a paragraph of clear, rigorous scientific context.
 
 Return a structurally clean JSON matching the requested responseSchema. Avoid any extra markdown code formatting wrappers outside the raw JSON.
 `;

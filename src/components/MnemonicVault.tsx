@@ -489,16 +489,16 @@ export default function MnemonicVault() {
               {item.mapping && item.mapping.length > 0 && (
                 <div className="space-y-1.5">
                   <span className="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold block">Symbol Decode Blueprint</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  <div className="flex flex-col gap-1.5">
                     {item.mapping.map((map, index) => (
                       <div
                         key={index}
-                        className="p-1.5 bg-slate-50/50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-850 rounded-lg flex flex-col md:flex-row md:items-center gap-1 select-none"
+                        className="p-2 bg-slate-50/50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-850 rounded-xl flex items-start gap-2.5 select-none"
                       >
-                        <strong className="text-[11px] font-black text-indigo-605 dark:text-indigo-400 shrink-0 md:border-r md:border-slate-205 md:pr-1.5">
+                        <div className="flex items-center justify-center min-w-[32px] h-[22px] bg-indigo-50 dark:bg-indigo-950/40 text-[10.5px] font-mono font-black text-indigo-600 dark:text-indigo-400 rounded-md shrink-0 border border-indigo-100/50 dark:border-indigo-900/30">
                           {map.key}
-                        </strong>
-                        <span className="text-[10px] text-slate-655 dark:text-zinc-350 font-semibold leading-tight truncate" title={map.standsFor}>
+                        </div>
+                        <span className="text-[11px] text-slate-650 dark:text-zinc-300 font-semibold leading-relaxed">
                           {map.standsFor}
                         </span>
                       </div>
@@ -509,8 +509,11 @@ export default function MnemonicVault() {
 
               {/* Explanation field */}
               {item.explanation && (
-                <div className="border-t border-dashed border-slate-150 dark:border-zinc-850 pt-2 text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed font-medium">
-                  {item.explanation}
+                <div className="border-t border-dashed border-slate-150 dark:border-zinc-850 pt-2.5 space-y-1">
+                  <span className="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold block">🎓 Conceptual Review & Exam Context</span>
+                  <p className="text-[11px] text-slate-550 dark:text-zinc-350 leading-relaxed font-semibold">
+                    {item.explanation}
+                  </p>
                 </div>
               )}
             </div>

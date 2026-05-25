@@ -17,6 +17,7 @@ import { getBiologyMarathonTest } from "./biology_data";
 import { Test, TestProgress, ExamHistoryItem } from "./types";
 import { healQuestionCorrectIndexFromExplanation } from "./lib/jsonHealer";
 import { getRandomQuote } from "./lib/quotes";
+import { getManualPracticeDates, recordPracticeToday, calculateStreakStats } from "./lib/streak";
 
 const LOCAL_STORAGE_TESTS_KEY = "practice_companion_tests_v1";
 const LOCAL_STORAGE_PROGRESS_KEY = "practice_companion_progress_v1";
@@ -121,6 +122,16 @@ export default function App() {
     return [];
   });
 
+  // Daily practice streak state and triggers (User Requested Feature)
+  const [manualDates, setManualDates] = useState<string[]>(() => getManualPracticeDates());
+
+  const triggerPractice = () => {
+    const updated = recordPracticeToday();
+    setManualDates(updated);
+  };
+
+  const streakStats = calculateStreakStats(examHistory, progress, manualDates);
+
   // Daily Planner tasks state with persistence
   const [plannerTasks, setPlannerTasks] = useState<PlannerTask[]>(() => {
     try {
@@ -155,9 +166,14 @@ export default function App() {
   };
 
   const handleTogglePlannerTask = (id: string) => {
-    setPlannerTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
+    setPlannerTasks((prev) => {
+      const updated = prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t));
+      const target = updated.find((t) => t.id === id);
+      if (target?.completed) {
+        setTimeout(triggerPractice, 50);
+      }
+      return updated;
+    });
   };
 
   const handleDeletePlannerTask = (id: string) => {
@@ -309,6 +325,7 @@ export default function App() {
   };
 
   const handleUpdateTestProgress = (testId: string, partial: Partial<TestProgress>) => {
+    setTimeout(triggerPractice, 50);
     setProgress((prev) => {
       const existing = prev[testId] || {
         testId,
@@ -409,6 +426,8 @@ export default function App() {
               const matchedTest = tests.find((t) => t.id === activeTestId);
               if (!matchedTest) return;
 
+              triggerPractice();
+
               const newHistoryItem: ExamHistoryItem = {
                 id: `history-log-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
                 testId: matchedTest.id,
@@ -473,6 +492,7 @@ export default function App() {
             onRenameTest={handleRenameTest}
             remainingPlannerTasksCount={remainingPlannerTasksCount}
             setActiveTab={setActiveTab}
+            streakStats={streakStats}
           />
         )}
       </div>

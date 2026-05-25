@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import {
   Plus,
   Search,
@@ -12,9 +13,11 @@ import {
   Pencil,
   Check,
   X,
-  ClipboardList
+  ClipboardList,
+  Flame
 } from "lucide-react";
 import { Test, TestProgress } from "../types";
+import { StreakStats } from "../lib/streak";
 
 interface TestLibraryProps {
   tests: Test[];
@@ -26,6 +29,7 @@ interface TestLibraryProps {
   onRenameTest?: (testId: string, newTitle: string) => void;
   remainingPlannerTasksCount?: number;
   setActiveTab?: (tab: any) => void;
+  streakStats?: StreakStats;
 }
 
 export default function TestLibrary({
@@ -38,6 +42,7 @@ export default function TestLibrary({
   onRenameTest,
   remainingPlannerTasksCount = 0,
   setActiveTab,
+  streakStats,
 }: TestLibraryProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTestId, setEditingTestId] = useState<string | null>(null);
@@ -98,6 +103,131 @@ export default function TestLibrary({
           </span>
         </div>
       )}
+
+      {/* Daily Practice Streak Tracker (User Requested) */}
+      {streakStats && (() => {
+        const isLegendary = streakStats.currentStreak >= 7;
+        const isActiveStreak = streakStats.currentStreak >= 3;
+        
+        return (
+          <div 
+            id="practice-streak-tracker" 
+            className={`transition-all duration-300 bg-white dark:bg-[#18181b] border rounded-2xl p-4 mb-4 select-none animate-slide-up shadow-xs ${
+              isLegendary 
+                ? "border-amber-300 dark:border-amber-500/40 shadow-md shadow-amber-500/5 bg-gradient-to-br from-white to-amber-50/10 dark:from-zinc-900 dark:to-amber-950/5" 
+                : isActiveStreak
+                ? "border-amber-200/60 dark:border-amber-500/20"
+                : "border-slate-100 dark:border-zinc-800"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  animate={
+                    isLegendary
+                      ? {
+                          scale: [1, 1.22, 1.05, 1.25, 1],
+                          rotate: [0, -8, 8, -5, 5, 0],
+                          filter: [
+                            "drop-shadow(0 0 2px rgba(245, 158, 11, 0.4))",
+                            "drop-shadow(0 0 10px rgba(245, 158, 11, 0.8))",
+                            "drop-shadow(0 0 4px rgba(245, 158, 11, 0.5))",
+                            "drop-shadow(0 0 12px rgba(239, 68, 68, 0.9))",
+                            "drop-shadow(0 0 2px rgba(245, 158, 11, 0.4))",
+                          ]
+                        }
+                      : isActiveStreak
+                      ? {
+                          scale: [1, 1.15, 1.05, 1.18, 1],
+                          rotate: [0, -4, 4, 0],
+                        }
+                      : streakStats.currentStreak > 0
+                      ? {
+                          scale: [1, 1.1, 1],
+                        }
+                      : {}
+                  }
+                  transition={{
+                    duration: isLegendary ? 1.4 : isActiveStreak ? 1.8 : 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
+                    isLegendary 
+                      ? "bg-gradient-to-tr from-amber-500 to-rose-500 text-white shadow-md shadow-amber-500/20" 
+                      : streakStats.currentStreak > 0 
+                      ? "bg-amber-500/10 text-amber-500" 
+                      : "bg-slate-50 dark:bg-zinc-850 text-slate-400"
+                  }`}
+                >
+                  <Flame className={`w-5.5 h-5.5 ${isLegendary ? "text-white fill-white" : streakStats.currentStreak > 0 ? "text-amber-500 fill-amber-500" : "text-slate-400"}`} />
+                </motion.div>
+                <div>
+                  <h4 className="text-xs font-extrabold text-slate-800 dark:text-zinc-100 flex items-center gap-1.5 uppercase tracking-wide">
+                    {streakStats.currentStreak} Day Practice Streak
+                    {isLegendary && (
+                      <span className="text-[8px] bg-gradient-to-r from-amber-500 to-rose-500 text-white px-2 py-0.5 rounded-full font-black tracking-widest animate-pulse select-none uppercase shrink-0">
+                        Legendary
+                      </span>
+                    )}
+                    {!isLegendary && isActiveStreak && (
+                      <span className="text-[8px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-black tracking-widest select-none uppercase shrink-0">
+                        Active
+                      </span>
+                    )}
+                  </h4>
+                  <p className="text-[10px] text-slate-450 dark:text-zinc-400 leading-snug mt-0.5">
+                    {streakStats.practicedToday 
+                      ? (isLegendary ? "Your daily practice code is burning legendary! Unstoppable study form." : "Streak is burning bright! Keep it up tomorrow.") 
+                      : "Unstarted today. Solve a workbook or complete a planner card to burn!"}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-right shrink-0">
+                <span className="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold block">Best</span>
+                <span className="text-[11px] font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-0.5 justify-end mt-0.5">
+                  <Award className="w-3.5 h-3.5" />
+                  {streakStats.bestStreak} days
+                </span>
+              </div>
+            </div>
+
+            {/* Last 7 Days horizontal agenda */}
+            <div className="pt-2.5 border-t border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-1 overflow-x-auto">
+              {streakStats.last7Days.map((day, idx) => {
+                const isToday = day.isToday;
+                return (
+                  <div key={idx} className="flex flex-col items-center flex-1 min-w-[32px] text-center">
+                    <span className={`text-[8.5px] font-black uppercase mb-1 ${isToday ? "text-indigo-500 font-extrabold" : "text-slate-400 dark:text-zinc-500"}`}>
+                      {day.dayLabel}
+                    </span>
+                    <div 
+                      title={day.practiced ? `Practiced on ${day.dateStr}` : `No practice on ${day.dateStr}`}
+                      className={`w-6.5 h-6.5 rounded-full flex items-center justify-center transition-all ${
+                        day.practiced 
+                          ? "bg-amber-500/10 text-amber-505 dark:bg-amber-500/15 text-amber-400 border border-amber-300 dark:border-amber-900/40" 
+                          : isToday 
+                          ? "bg-indigo-500/5 text-indigo-400 border border-dashed border-indigo-250 cursor-pointer" 
+                          : "bg-slate-50 dark:bg-zinc-855 text-slate-305 dark:text-zinc-600 border border-slate-100 dark:border-zinc-805"
+                      }`}
+                    >
+                      {day.practiced ? (
+                        <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                      ) : (
+                        <span className="text-[8px] font-extrabold">{day.dayLabel[0]}</span>
+                      )}
+                    </div>
+                    {isToday && (
+                      <span className="text-[7px] text-indigo-500 font-bold uppercase mt-1 leading-none tracking-widest scale-90">Today</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Stats Summary Bento grid */}
       <div id="stats-bento" className="grid grid-cols-3 gap-2.5 mb-5 select-none shrink-0">
