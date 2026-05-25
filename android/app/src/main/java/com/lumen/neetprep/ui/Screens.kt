@@ -3,6 +3,7 @@ package com.lumen.neetprep.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,7 +86,7 @@ fun LibraryScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AssignmentAlert,
+                        imageVector = Icons.Default.Warning,
                         contentDescription = "Alert",
                         tint = Amber500,
                         modifier = Modifier.size(32.dp)
@@ -357,7 +358,7 @@ fun GymScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .maxHeight(0.6f)
+                            .fillMaxHeight(0.6f)
                     ) {
                         Text(
                             text = question.questionText,
@@ -365,7 +366,7 @@ fun GymScreen(
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
-                        Divider(modifier = Modifier.padding(bottom = 12.dp))
+                        HorizontalDivider(modifier = Modifier.padding(bottom = 12.dp))
                         Text(
                             text = "Correct Option: (${question.correctOptionIndex + 1}) \n${question.options[question.correctOptionIndex]}",
                             fontSize = 13.sp,

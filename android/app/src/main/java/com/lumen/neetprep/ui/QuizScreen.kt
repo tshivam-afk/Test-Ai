@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -250,7 +252,7 @@ fun QuizScreen(
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(
-                            imageVector = if (bookmarked.contains(currentQuestion.number)) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            imageVector = if (bookmarked.contains(currentQuestion.number)) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Bookmark",
                             tint = if (bookmarked.contains(currentQuestion.number)) Amber500 else Color.LightGray,
                             modifier = Modifier
@@ -262,7 +264,7 @@ fun QuizScreen(
                                 }
                         )
                         Icon(
-                            imageVector = if (flagged.contains(currentQuestion.number)) Icons.Default.Flag else Icons.Default.OutlinedFlag,
+                            imageVector = if (flagged.contains(currentQuestion.number)) Icons.Default.Flag else Icons.Outlined.Flag,
                             contentDescription = "Flag",
                             tint = if (flagged.contains(currentQuestion.number)) Color.Red else Color.LightGray,
                             modifier = Modifier
