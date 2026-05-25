@@ -117,10 +117,10 @@ fun QuizScreen(
         TopAppBar(
             title = {
                 Column {
-                    Text(text = test.title.take(30) + "...", fontSize = 14sp, fontWeight = FontWeight.Black)
+                    Text(text = test.title.take(30) + "...", fontSize = 14.sp, fontWeight = FontWeight.Black)
                     Text(
                         text = "Current Mode: " + mode.uppercase(),
-                        fontSize = 10sp,
+                        fontSize = 10.sp,
                         color = if (mode == "study") Teal600 else Color.Red,
                         fontWeight = FontWeight.Bold
                     )
@@ -138,7 +138,7 @@ fun QuizScreen(
                 Text(
                     text = String.format("%02d:%02d", mins, secs),
                     fontWeight = FontWeight.Black,
-                    fontSize = 13sp,
+                    fontSize = 13.sp,
                     color = SlateDark,
                     modifier = Modifier.padding(end = 12.dp)
                 )
@@ -169,17 +169,17 @@ fun QuizScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Exam Complete! 🎓", fontSize = 20sp, fontWeight = FontWeight.Black, color = SlateDark)
+                        Text("Exam Complete! 🎓", fontSize = 20.sp, fontWeight = FontWeight.Black, color = SlateDark)
                         Spacer(modifier = Modifier.height(16.dp))
 
                         val scorePoints = (totalCorrect * 4) - totalIncorrect
                         Text(
                             text = "$scorePoints PTS",
-                            fontSize = 42sp,
+                            fontSize = 42.sp,
                             fontWeight = FontWeight.Black,
                             color = if (scorePoints > 0) Teal600 else Color.Red
                         )
-                        Text("NEET Score weight metrics (+4 | -1)", fontSize = 11sp, color = Color.Gray)
+                        Text("NEET Score weight metrics (+4 | -1)", fontSize = 11.sp, color = Color.Gray)
 
                         Spacer(modifier = Modifier.height(24.dp))
                         Row(
@@ -187,16 +187,16 @@ fun QuizScreen(
                             horizontalArrangement = Arrangement.SpaceAround
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Correct ✅", fontSize = 11sp, color = Color.Gray)
-                                Text("$totalCorrect", fontWeight = FontWeight.Bold, fontSize = 18sp, color = Teal600)
+                                Text("Correct ✅", fontSize = 11.sp, color = Color.Gray)
+                                Text("$totalCorrect", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Teal600)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Incorrect ❌", fontSize = 11sp, color = Color.Gray)
-                                Text("$totalIncorrect", fontWeight = FontWeight.Bold, fontSize = 18sp, color = Color.Red)
+                                Text("Incorrect ❌", fontSize = 11.sp, color = Color.Gray)
+                                Text("$totalIncorrect", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Red)
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Unanswered ⚪", fontSize = 11sp, color = Color.Gray)
-                                Text("$totalBlank", fontWeight = FontWeight.Bold, fontSize = 18sp, color = Color.Gray)
+                                Text("Unanswered ⚪", fontSize = 11.sp, color = Color.Gray)
+                                Text("$totalBlank", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Gray)
                             }
                         }
 
@@ -244,7 +244,7 @@ fun QuizScreen(
                 ) {
                     Text(
                         text = "Question ${currentIdx + 1} of ${questions.size}",
-                        fontSize = 12sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray
                     )
@@ -285,14 +285,14 @@ fun QuizScreen(
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
                             text = currentQuestion.subject.uppercase(),
-                            fontSize = 9sp,
+                            fontSize = 9.sp,
                             fontWeight = FontWeight.Black,
                             color = Indigo600
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = currentQuestion.questionText,
-                            fontSize = 15sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
                             color = SlateDark
                         )
@@ -362,13 +362,13 @@ fun QuizScreen(
                             Text(
                                 text = "(${optIdx + 1})",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 14sp,
+                                fontSize = 14.sp,
                                 color = if (isSelected && mode != "study") Indigo600 else Color.Gray,
                                 modifier = Modifier.padding(end = 12.dp)
                             )
                             Text(
                                 text = optionText,
-                                fontSize = 13sp,
+                                fontSize = 13.sp,
                                 color = SlateDark
                             )
                         }
@@ -387,11 +387,11 @@ fun QuizScreen(
                                 Text(
                                     text = if (selectedOption == currentQuestion.correctOptionIndex) "Correct Answer! 🎉" else "Incorrect Match 🔍",
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12sp,
+                                    fontSize = 12.sp,
                                     color = if (selectedOption == currentQuestion.correctOptionIndex) Teal600 else Color.Red
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(text = currentQuestion.solution, fontSize = 12sp, color = Color.DarkGray)
+                                Text(text = currentQuestion.solution, fontSize = 12.sp, color = Color.DarkGray)
                             }
                         }
                     }
@@ -404,7 +404,7 @@ fun QuizScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
-                        Text("Add study reference notes...", fontSize = 11sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                        Text("Add study reference notes...", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                         Spacer(modifier = Modifier.height(6.dp))
                         OutlinedTextField(
                             value = activeNoteInput,
@@ -436,7 +436,7 @@ fun QuizScreen(
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Icon(Icons.Default.ArrowBackIos, contentDescription = "Prev", modifier = Modifier.size(14.dp))
-                        Text("Prev", fontSize = 13sp)
+                        Text("Prev", fontSize = 13.sp)
                     }
 
                     if (currentIdx == questions.size - 1) {
@@ -491,7 +491,7 @@ fun QuizScreen(
                         ) {
                             Icon(Icons.Default.CheckCircle, contentDescription = "Submit", modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Complete Exam", fontSize = 13sp)
+                            Text("Complete Exam", fontSize = 13.sp)
                         }
                     } else {
                         Button(
@@ -499,7 +499,7 @@ fun QuizScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Text("Next", fontSize = 13sp)
+                            Text("Next", fontSize = 13.sp)
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(Icons.Default.ArrowForwardIos, contentDescription = "Next", modifier = Modifier.size(14.dp))
                         }
@@ -517,7 +517,7 @@ fun QuizScreen(
                         Text("Dismiss Map")
                     }
                 },
-                title = { Text("Jump to syllabus question", fontSize = 15sp, fontWeight = FontWeight.Bold) },
+                title = { Text("Jump to syllabus question", fontSize = 15.sp, fontWeight = FontWeight.Bold) },
                 text = {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(5),
@@ -550,7 +550,7 @@ fun QuizScreen(
                                 Text(
                                     text = "${index + 1}",
                                     color = textColor,
-                                    fontSize = 11sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
 

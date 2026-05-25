@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
                                 label = {
                                     Text(
                                         text = label,
-                                        fontSize = 10sp,
+                                        fontSize = 10.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                     )
                                 },

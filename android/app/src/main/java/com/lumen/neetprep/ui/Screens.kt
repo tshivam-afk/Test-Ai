@@ -58,14 +58,14 @@ fun LibraryScreen(
     ) {
         Text(
             text = "Lumen NEET Prep Desk",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark,
             fontFamily = FontFamily.SansSerif
         )
         Text(
             text = "Master your NCERT biology, physical chemistry and physics",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -95,12 +95,12 @@ fun LibraryScreen(
                         Text(
                             text = "You have $uncompletedTasks agenda task${if (uncompletedTasks > 1) "s" else ""} left today!",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13sp,
+                            fontSize = 13.sp,
                             color = Color(0xFF92400E)
                         )
                         Text(
                             text = "Tap here to view your NEET disciplines planner.",
-                            fontSize = 10sp,
+                            fontSize = 10.sp,
                             color = Color(0xFFB45309)
                         )
                     }
@@ -146,7 +146,7 @@ fun LibraryScreen(
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
                             text = test.title,
-                            fontSize = 16sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = SlateDark
                         )
@@ -162,7 +162,7 @@ fun LibraryScreen(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "Syllabus • $totalQuestions Questions",
-                                fontSize = 11sp,
+                                fontSize = 11.sp,
                                 color = Color.Gray
                             )
                         }
@@ -186,7 +186,7 @@ fun LibraryScreen(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
                                     text = "$pct% done",
-                                    fontSize = 11sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Indigo600
                                 )
@@ -203,7 +203,7 @@ fun LibraryScreen(
                             ) {
                                 Icon(Icons.Default.ChromeReaderMode, contentDescription = "Study", modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Study Mode", fontSize = 11sp)
+                                Text("Study Mode", fontSize = 11.sp)
                             }
                             OutlinedButton(
                                 onClick = { onSelectTest(test, "exam") },
@@ -213,7 +213,7 @@ fun LibraryScreen(
                             ) {
                                 Icon(Icons.Default.HourglassEmpty, contentDescription = "Exam", modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Exam Mode", fontSize = 11sp)
+                                Text("Exam Mode", fontSize = 11.sp)
                             }
                         }
                     }
@@ -254,13 +254,13 @@ fun GymScreen(
     ) {
         Text(
             text = "Mistake Gym 💪",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark
         )
         Text(
             text = "Your personalized errors workbook. High-yield correction yields higher scores.",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -280,7 +280,7 @@ fun GymScreen(
                         modifier = Modifier.size(64.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Your Gym is clean! No incorrect questions.", fontSize = 14sp, color = Color.Gray, fontWeight = FontWeight.Bold)
+                    Text("Your Gym is clean! No incorrect questions.", fontSize = 14.sp, color = Color.Gray, fontWeight = FontWeight.Bold)
                 }
             }
         } else {
@@ -301,7 +301,7 @@ fun GymScreen(
                             ) {
                                 Text(
                                     text = question.subject,
-                                    fontSize = 10sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White,
                                     modifier = Modifier
@@ -310,14 +310,14 @@ fun GymScreen(
                                 )
                                 Text(
                                     text = "Book: ${test.title.take(12)}...",
-                                    fontSize = 10sp,
+                                    fontSize = 10.sp,
                                     color = Color.Gray
                                 )
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Problem Q${question.number}: ${question.questionText}",
-                                fontSize = 13sp,
+                                fontSize = 13.sp,
                                 maxLines = 3,
                                 color = SlateDark,
                                 fontWeight = FontWeight.Medium
@@ -325,7 +325,7 @@ fun GymScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 text = "Tap to review correct solutions & formulas.",
-                                fontSize = 11sp,
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Indigo600
                             )
@@ -348,7 +348,7 @@ fun GymScreen(
                 title = {
                     Text(
                         text = "Question ${question.number} Error Analysis",
-                        fontSize = 16sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = SlateDark
                     )
@@ -361,14 +361,14 @@ fun GymScreen(
                     ) {
                         Text(
                             text = question.questionText,
-                            fontSize = 13sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                         Divider(modifier = Modifier.padding(bottom = 12.dp))
                         Text(
                             text = "Correct Option: (${question.correctOptionIndex + 1}) \n${question.options[question.correctOptionIndex]}",
-                            fontSize = 13sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Teal600,
                             modifier = Modifier.padding(bottom = 12.dp)
@@ -376,12 +376,12 @@ fun GymScreen(
                         Text(
                             text = "Physics/Botany Core Solution Guide:",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12sp,
+                            fontSize = 12.sp,
                             color = SlateDark
                         )
                         Text(
                             text = question.solution,
-                            fontSize = 12sp,
+                            fontSize = 12.sp,
                             color = Color.DarkGray,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -408,13 +408,13 @@ fun HistoryScreen(
     ) {
         Text(
             text = "Exam Attempt History 📜",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark
         )
         Text(
             text = "Track your speed, negative marks and overall performance logs.",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -426,7 +426,7 @@ fun HistoryScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No previous exam histories. Complete a timed exam tab to log!", fontSize = 13sp, color = Color.Gray)
+                Text("No previous exam histories. Complete a timed exam tab to log!", fontSize = 13.sp, color = Color.Gray)
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.weight(1f)) {
@@ -443,7 +443,7 @@ fun HistoryScreen(
                             ) {
                                 Text(
                                     text = item.dateTime.take(16).replace("T", " "),
-                                    fontSize = 10sp,
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.Gray
                                 )
@@ -459,7 +459,7 @@ fun HistoryScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = item.testTitle,
-                                fontSize = 15sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SlateDark
                             )
@@ -470,30 +470,30 @@ fun HistoryScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column {
-                                    Text("Final Score", fontSize = 10sp, color = Color.Gray)
+                                    Text("Final Score", fontSize = 10.sp, color = Color.Gray)
                                     Text(
                                         text = "${item.score.finalScore} PTS",
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 16sp,
+                                        fontSize = 16.sp,
                                         color = if (item.score.finalScore >= 15) Teal600 else Color.Red
                                     )
                                 }
                                 Column {
-                                    Text("Correct", fontSize = 10sp, color = Color.Gray)
+                                    Text("Correct", fontSize = 10.sp, color = Color.Gray)
                                     Text(
                                         text = "${item.score.correctCount} answers",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 12sp,
+                                        fontSize = 12.sp,
                                         color = Teal600
                                     )
                                 }
                                 Column {
-                                    Text("Pace Index", fontSize = 10sp, color = Color.Gray)
+                                    Text("Pace Index", fontSize = 10.sp, color = Color.Gray)
                                     val pace = if (item.questions.isNotEmpty()) item.timeSpent / item.questions.size else 0
                                     Text(
                                         text = "${pace}s / q",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 12sp,
+                                        fontSize = 12.sp,
                                         color = Indigo600
                                     )
                                 }
@@ -523,13 +523,13 @@ fun PlannerScreen(
     ) {
         Text(
             text = "Daily Planner Desk 📝",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark
         )
         Text(
             text = "Track daily practice targets structure by NEET core subject catalogs.",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -567,7 +567,7 @@ fun PlannerScreen(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(2.dp)
                         ) {
-                            Text(sub, fontSize = 9sp, fontWeight = FontWeight.Bold)
+                            Text(sub, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -631,13 +631,13 @@ fun PlannerScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = task.subject.uppercase(),
-                                fontSize = 8sp,
+                                fontSize = 8.sp,
                                 color = badgeColor,
                                 fontWeight = FontWeight.Black
                             )
                             Text(
                                 text = task.text,
-                                fontSize = 13sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = if (task.completed) Color.LightGray else SlateDark
                             )
@@ -703,14 +703,14 @@ fun RelaxScreen(
     ) {
         Text(
             text = "Stress Release Room 💆",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark,
             modifier = Modifier.align(Alignment.Start)
         )
         Text(
             text = "Calm your nervous system and increase neural focus plasticity.",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier
                 .align(Alignment.Start)
@@ -743,7 +743,7 @@ fun RelaxScreen(
             }
             Text(
                 text = breathePhase,
-                fontSize = 11sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Black,
                 color = SlateDark
             )
@@ -753,12 +753,12 @@ fun RelaxScreen(
         Text(
             text = "Focus Wave Generator Synthesizer",
             fontWeight = FontWeight.Bold,
-            fontSize = 14sp,
+            fontSize = 14.sp,
             color = SlateDark
         )
         Text(
             text = "Custom generated binaural sounds streaming purely out of your CPU offline.",
-            fontSize = 10sp,
+            fontSize = 10.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -801,8 +801,8 @@ fun RelaxScreen(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text(title, fontWeight = FontWeight.Bold, fontSize = 12sp, color = SlateDark)
-                        Text(description, fontSize = 10sp, color = Color.Gray)
+                        Text(title, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = SlateDark)
+                        Text(description, fontSize = 10.sp, color = Color.Gray)
                     }
                 }
             }
@@ -826,13 +826,13 @@ fun SyncScreen(
     ) {
         Text(
             text = "Online Sync & Backups 🚀",
-            fontSize = 26sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             color = SlateDark
         )
         Text(
             text = "Your data runs 100% in your device sandbox. Back up often to secure progress.",
-            fontSize = 12sp,
+            fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -847,12 +847,12 @@ fun SyncScreen(
                 Text(
                     text = "Backup & Instant Share",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14sp,
+                    fontSize = 14.sp,
                     color = SlateDark
                 )
                 Text(
                     text = "Creates a highly encrypted JSON backup string and opens the native Android share-sheet. Send this string to keep, email, or a friend to backup progress flawlessly.",
-                    fontSize = 11sp,
+                    fontSize = 11.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
@@ -879,12 +879,12 @@ fun SyncScreen(
                 Text(
                     text = "Restore Progress backup",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14sp,
+                    fontSize = 14.sp,
                     color = SlateDark
                 )
                 Text(
                     text = "Paste your exact backup JSON string structure inside the block down below to reload previous checkpoints instantly.",
-                    fontSize = 11sp,
+                    fontSize = 11.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(bottom = 12.dp)
                 )
@@ -925,7 +925,7 @@ fun SyncScreen(
                     Text(
                         text = operationResultMsg,
                         color = if (operationResultMsg.contains("Success")) Teal600 else Color.Red,
-                        fontSize = 11sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
