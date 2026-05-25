@@ -37,6 +37,21 @@ import com.lumen.neetprep.models.TestProgress
 import kotlinx.coroutines.delay
 import java.util.*
 
+@Composable
+fun getThemeBg(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF0B0F19) else Color(0xFFF8FAFC)
+
+@Composable
+fun getThemeCardBg(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF151D30) else Color.White
+
+@Composable
+fun getThemeText(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFFF1F5F9) else Color(0xFF0F172A)
+
+@Composable
+fun getThemeSubText(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF94A3B8) else Color.Gray
+
+@Composable
+fun getThemeBorder(): Color = if (LocalStorageManager.isDarkThemeState.value) Color(0xFF1F2930) else Color(0xFFE2E8F0)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizScreen(
@@ -94,29 +109,29 @@ fun QuizScreen(
 
     // Load active notes
     LaunchedEffect(currentIdx) {
-        activeNoteInput = notes[currentQuestion.number] ?: ""
+        activeNoteInput = notes[currentQuestion.number.toString()] ?: ""
     }
 
     val totalCorrect = remember(isSubmitted, answers) {
         if (!isSubmitted) 0 else {
-            questions.count { answers[it.number] == it.correctOptionIndex }
+            questions.count { answers[it.number.toString()] == it.correctOptionIndex }
         }
     }
     val totalIncorrect = remember(isSubmitted, answers) {
         if (!isSubmitted) 0 else {
-            questions.count { answers.containsKey(it.number) && answers[it.number] != it.correctOptionIndex }
+            questions.count { answers.containsKey(it.number.toString()) && answers[it.number.toString()] != it.correctOptionIndex }
         }
     }
     val totalBlank = remember(isSubmitted, answers) {
         if (!isSubmitted) 0 else {
-            questions.count { !answers.containsKey(it.number) }
+            questions.count { !answers.containsKey(it.number.toString()) }
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightBg)
+            .background(getThemeBg())
     ) {
         // TOP CONTROLLER HEADER
         TopAppBar(
@@ -144,7 +159,7 @@ fun QuizScreen(
                     text = String.format("%02d:%02d", mins, secs),
                     fontWeight = FontWeight.Black,
                     fontSize = 13.sp,
-                    color = SlateDark,
+                    color = getThemeText(),
                     modifier = Modifier.padding(end = 12.dp)
                 )
 
@@ -164,7 +179,7 @@ fun QuizScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = getThemeCardBg()),
                     shape = RoundedCornerShape(24.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -174,7 +189,7 @@ fun QuizScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Exam Complete! 🎓", fontSize = 20.sp, fontWeight = FontWeight.Black, color = SlateDark)
+                        Text("Exam Complete! 🎓", fontSize = 20.sp, fontWeight = FontWeight.Black, color = getThemeText())
                         Spacer(modifier = Modifier.height(16.dp))
 
                         val scorePoints = (totalCorrect * 4) - totalIncorrect
@@ -283,7 +298,7 @@ fun QuizScreen(
 
                 // Question Box
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = getThemeCardBg()),
                     shape = RoundedCornerShape(20.dp),
                     elevation = CardDefaults.cardElevation(2.dp)
                 ) {
@@ -299,20 +314,20 @@ fun QuizScreen(
                             text = currentQuestion.questionText,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
-                            color = SlateDark
+                            color = getThemeText()
                         )
                     }
                 }
 
                 // Options Lists
-                val selectedOption = answers[currentQuestion.number]
+                val selectedOption = answers[currentQuestion.number.toString()]
                 currentQuestion.options.forEachIndexed { optIdx, optionText ->
                     val isSelected = selectedOption == optIdx
                     val optionBg = if (isSelected) {
                         if (mode == "study") {
                             if (optIdx == currentQuestion.correctOptionIndex) Color(0xFFD1FAE5) else Color(0xFFFEE2E2)
                         } else Indigo600.copy(alpha = 0.08f)
-                    } else Color.White
+                    } else getThemeCardBg()
 
                     val optionBorder = if (isSelected) {
                         if (mode == "study") {
@@ -329,12 +344,12 @@ fun QuizScreen(
                             .clickable {
                                 if (!isSubmitted) {
                                     val updatedAnswers = answers.toMutableMap()
-                                    updatedAnswers[currentQuestion.number] = optIdx
+                                    updatedAnswers[currentQuestion.number.toString()] = optIdx
 
                                     // Auto-mark Confidence level to confident ("sure") to satisfy user auto-progress request
                                     val updatedConfidences = confidences.toMutableMap()
-                                    if (!updatedConfidences.containsKey(currentQuestion.number)) {
-                                        updatedConfidences[currentQuestion.number] = "sure"
+                                    if (!updatedConfidences.containsKey(currentQuestion.number.toString())) {
+                                        updatedConfidences[currentQuestion.number.toString()] = "sure"
                                     }
 
                                     answers = updatedAnswers
@@ -374,7 +389,7 @@ fun QuizScreen(
                             Text(
                                 text = optionText,
                                 fontSize = 13.sp,
-                                color = SlateDark
+                                color = getThemeText()
                             )
                         }
                     }
@@ -404,7 +419,7 @@ fun QuizScreen(
 
                 // Personal written Notes box
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = getThemeCardBg()),
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -416,7 +431,7 @@ fun QuizScreen(
                             onValueChange = {
                                 activeNoteInput = it
                                 val updatedNotes = notes.toMutableMap()
-                                updatedNotes[currentQuestion.number] = it
+                                updatedNotes[currentQuestion.number.toString()] = it
                                 notes = updatedNotes
                             },
                             placeholder = { Text("E.g., Formula derivation, biology textbook page 112...") },
@@ -449,9 +464,9 @@ fun QuizScreen(
                             onClick = {
                                 isSubmitted = true
                                 // Compile final score
-                                val correctC = questions.count { answers[it.number] == it.correctOptionIndex }
-                                val incorrectC = questions.count { answers.containsKey(it.number) && answers[it.number] != it.correctOptionIndex }
-                                val blankC = questions.count { !answers.containsKey(it.number) }
+                                val correctC = questions.count { answers[it.number.toString()] == it.correctOptionIndex }
+                                val incorrectC = questions.count { answers.containsKey(it.number.toString()) && answers[it.number.toString()] != it.correctOptionIndex }
+                                val blankC = questions.count { !answers.containsKey(it.number.toString()) }
                                 val totalPoints = (correctC * 4) - incorrectC
 
                                 val score = Score(
@@ -532,14 +547,14 @@ fun QuizScreen(
                     ) {
                         items(questions.size) { index ->
                             val qNumber = questions[index].number
-                            val isAnswered = answers.containsKey(qNumber)
+                            val isAnswered = answers.containsKey(qNumber.toString())
                             val isFlagged = flagged.contains(qNumber)
                             val isBookmarked = bookmarked.contains(qNumber)
                             
                             val bg = if (currentIdx == index) Indigo600 else {
                                 if (isAnswered) Teal600.copy(alpha = 0.15f) else Color(0xFFF1F5F9)
                             }
-                            val textColor = if (currentIdx == index) Color.White else SlateDark
+                            val textColor = if (currentIdx == index) Color.White else getThemeText()
 
                             Box(
                                 modifier = Modifier

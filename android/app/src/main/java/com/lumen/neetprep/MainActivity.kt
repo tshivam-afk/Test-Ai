@@ -3,6 +3,7 @@ package com.lumen.neetprep
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -18,6 +19,7 @@ import com.lumen.neetprep.data.MockData
 import com.lumen.neetprep.models.Test
 import com.lumen.neetprep.ui.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     private lateinit var storageManager: LocalStorageManager
     private val synthManager = AudioSynthManager()
@@ -32,11 +34,63 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
+            val isDark by remember { LocalStorageManager.isDarkThemeState }
             var activeTab by remember { mutableStateOf("library") }
             var activeTestForQuiz by remember { mutableStateOf<Test?>(null) }
             var activeQuizMode by remember { mutableStateOf("study") }
 
-            Column(modifier = Modifier.fillMaxSize()) {
+            // Reactive dynamically loaded imported custom test books
+            val customTests = remember(activeTab, activeTestForQuiz) {
+                storageManager.getCustomTests()
+            }
+            val allTests = remember(customTests) {
+                mockTests + customTests
+            }
+
+            val themeBg = if (isDark) androidx.compose.ui.graphics.Color(0xFF0B0F19) else androidx.compose.ui.graphics.Color(0xFFF8FAFC)
+            val themeCard = if (isDark) androidx.compose.ui.graphics.Color(0xFF151D30) else androidx.compose.ui.graphics.Color.White
+            val themeText = if (isDark) androidx.compose.ui.graphics.Color(0xFFF1F5F9) else androidx.compose.ui.graphics.Color(0xFF0F172A)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(themeBg)
+            ) {
+                // Global top bar with theme toggle (only show when not actively taking a checklist quiz)
+                if (activeTestForQuiz == null) {
+                    androidx.compose.material3.SmallTopAppBar(
+                        title = {
+                            Text(
+                                text = when(activeTab) {
+                                    "library" -> "NEET Practice Books"
+                                    "gym" -> "Mistake Revision Gym"
+                                    "history" -> "Performance Logs"
+                                    "planner" -> "Daily Study Tasks"
+                                    "relax" -> "Acoustic Focus Timer"
+                                    else -> "Sync Progress"
+                                },
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Black,
+                                color = themeText
+                            )
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                storageManager.setDarkTheme(!isDark)
+                            }) {
+                                Icon(
+                                    imageVector = if (isDark) Icons.Default.LightMode else Icons.Default.DarkMode,
+                                    contentDescription = "Toggle Theme",
+                                    tint = if (isDark) androidx.compose.ui.graphics.Color.Yellow else Indigo600
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.smallTopAppBarColors(
+                            containerColor = themeCard
+                        )
+                    )
+                }
+
                 Box(modifier = Modifier.weight(1f)) {
                     if (activeTestForQuiz != null) {
                         QuizScreen(
@@ -50,7 +104,7 @@ class MainActivity : ComponentActivity() {
                     } else {
                         when (activeTab) {
                             "library" -> LibraryScreen(
-                                tests = mockTests,
+                                tests = allTests,
                                 onSelectTest = { test, mode ->
                                     activeTestForQuiz = test
                                     activeQuizMode = mode
@@ -59,7 +113,7 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToPlanner = { activeTab = "planner" }
                             )
                             "gym" -> GymScreen(
-                                tests = mockTests,
+                                tests = allTests,
                                 storageManager = storageManager
                             )
                             "history" -> HistoryScreen(
@@ -83,7 +137,7 @@ class MainActivity : ComponentActivity() {
 
                 if (activeTestForQuiz == null) {
                     NavigationBar(
-                        containerColor = androidx.compose.ui.graphics.Color.White,
+                        containerColor = themeCard,
                         tonalElevation = 8.dp,
                         modifier = Modifier.height(72.dp)
                     ) {

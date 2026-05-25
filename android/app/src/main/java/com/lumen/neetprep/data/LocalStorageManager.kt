@@ -2,6 +2,7 @@ package com.lumen.neetprep.data
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.runtime.mutableStateOf
 import com.lumen.neetprep.models.CloudSyncPayload
 import com.lumen.neetprep.models.ExamHistoryItem
 import com.lumen.neetprep.models.PlannerTask
@@ -11,6 +12,14 @@ import kotlinx.serialization.json.Json
 
 class LocalStorageManager(private val context: Context) {
     private val prefs = context.getSharedPreferences("lumen_neet_prep_prefs_v2", Context.MODE_PRIVATE)
+    
+    init {
+        isDarkThemeState.value = isDarkTheme()
+    }
+
+    companion object {
+        val isDarkThemeState = mutableStateOf(false)
+    }
     
     private val jsonHelper = Json {
         ignoreUnknownKeys = true
@@ -75,6 +84,48 @@ class LocalStorageManager(private val context: Context) {
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    // --- CUSTOM TESTS (JSON IMPORTS) ---
+    fun getCustomTests(): List<Test> {
+        val rawJson = prefs.getString("custom_tests_list_json", null) ?: return emptyList()
+        return try {
+            jsonHelper.decodeFromString(rawJson)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun saveCustomTest(test: Test) {
+        val list = getCustomTests().toMutableList()
+        val index = list.indexOfFirst { it.id == test.id }
+        if (index >= 0) {
+            list[index] = test
+        } else {
+            list.add(test)
+        }
+        prefs.edit().putString("custom_tests_list_json", jsonHelper.encodeToString(list)).apply()
+    }
+
+    fun importTestFromJson(jsonStr: String): Boolean {
+        return try {
+            val test = jsonHelper.decodeFromString<Test>(jsonStr)
+            saveCustomTest(test)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    // --- THEME ---
+    fun isDarkTheme(): Boolean {
+        return prefs.getBoolean("is_dark_theme", false)
+    }
+
+    fun setDarkTheme(isDark: Boolean) {
+        prefs.edit().putBoolean("is_dark_theme", isDark).apply()
+        isDarkThemeState.value = isDark
     }
 
     // --- EXPORT AND BACKUP ---

@@ -32,11 +32,11 @@ data class Score(
 @Serializable
 data class TestProgress(
     val testId: String,
-    val answers: Map<Int, Int> = emptyMap(),
+    val answers: Map<String, Int> = emptyMap(),
     val flagged: List<Int> = emptyList(),
     val bookmarked: List<Int> = emptyList(),
-    val userNotes: Map<Int, String> = emptyMap(),
-    val confidences: Map<Int, String> = emptyMap(),
+    val userNotes: Map<String, String> = emptyMap(),
+    val confidences: Map<String, String> = emptyMap(),
     val timeSpent: Long = 0,
     val completed: Boolean = false,
     val score: Score? = null,
@@ -53,8 +53,8 @@ data class ExamHistoryItem(
     val dateTime: String,
     val timeSpent: Long,
     val score: Score,
-    val answers: Map<Int, Int> = emptyMap(),
-    val confidences: Map<Int, String> = emptyMap(),
+    val answers: Map<String, Int> = emptyMap(),
+    val confidences: Map<String, String> = emptyMap(),
     val questions: List<Question>
 )
 
