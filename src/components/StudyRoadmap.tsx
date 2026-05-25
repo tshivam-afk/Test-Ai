@@ -1,7 +1,5 @@
 import { useMemo, useState } from "react";
 import FlashcardArena from "./FlashcardArena";
-import SyllabusTracker from "./SyllabusTracker";
-import MnemonicVault from "./MnemonicVault";
 import {
   TrendingUp,
   Award,
@@ -34,7 +32,7 @@ interface StudyRoadmapProps {
 
 export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoadmapProps) {
   const [hoveredSubject, setHoveredSubject] = useState<string | null>(null);
-  const [roadmapTab, setRoadmapTab] = useState<"analytics" | "flashcards" | "syllabus" | "mnemonics">("analytics");
+  const [roadmapTab, setRoadmapTab] = useState<"analytics" | "flashcards">("analytics");
 
   // 1. Calculate and compile chart data for each test/workbook that has at least 1 attempt
   const chartData = useMemo(() => {
@@ -205,7 +203,7 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
         >
           📊 Analytics Matrix
         </button>
-        <button
+          <button
           onClick={() => setRoadmapTab("flashcards")}
           className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
             roadmapTab === "flashcards"
@@ -215,34 +213,10 @@ export default function StudyRoadmap({ tests, progress, onSelectTest }: StudyRoa
         >
           🎴 Recall Deck
         </button>
-        <button
-          onClick={() => setRoadmapTab("syllabus")}
-          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
-            roadmapTab === "syllabus"
-              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
-              : "text-slate-400 hover:text-slate-500"
-          }`}
-        >
-          📋 Prep Radar
-        </button>
-        <button
-          onClick={() => setRoadmapTab("mnemonics")}
-          className={`flex-1 py-1.8 text-center text-[11px] font-black transition-all rounded-lg cursor-pointer ${
-            roadmapTab === "mnemonics"
-              ? "bg-white dark:bg-zinc-900 text-indigo-650 dark:text-indigo-400 shadow-xs border border-slate-100 dark:border-zinc-800"
-              : "text-slate-400 hover:text-slate-500"
-          }`}
-        >
-          🧠 Mnemonic Vault
-        </button>
       </div>
 
       {roadmapTab === "flashcards" ? (
         <FlashcardArena />
-      ) : roadmapTab === "syllabus" ? (
-        <SyllabusTracker />
-      ) : roadmapTab === "mnemonics" ? (
-        <MnemonicVault />
       ) : (
         <>
           {/* Aggregate Score summary cards */}
