@@ -11,7 +11,7 @@ import ExamHistory from "./components/ExamHistory";
 import SyncSettingsModal from "./components/SyncSettingsModal";
 import PlannerView, { PlannerTask } from "./components/PlannerView";
 import RelaxView from "./components/RelaxView";
-import { BookOpen, TrendingUp, Dumbbell, History, Database, ClipboardList, Sparkles } from "lucide-react";
+import { BookOpen, TrendingUp, Dumbbell, History, Database, ClipboardList, Sparkles, Maximize2, Minimize2 } from "lucide-react";
 import { getSampleTest } from "./data";
 import { getBiologyMarathonTest } from "./biology_data";
 import { Test, TestProgress, ExamHistoryItem } from "./types";
@@ -94,6 +94,16 @@ export default function App() {
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const [activeTab, setActiveTab] = useState<"library" | "roadmap" | "gym" | "history" | "planner" | "relax">("library");
+  const [isWideFrame, setIsWideFrame] = useState(false);
+
+  // Auto-expand viewport for History and Relax tabs which are content-heavy or benefit from space
+  useEffect(() => {
+    if (activeTab === "history" || activeTab === "relax") {
+      setIsWideFrame(true);
+    } else {
+      setIsWideFrame(false);
+    }
+  }, [activeTab]);
 
   const [activeQuote] = useState(() => getRandomQuote());
 
@@ -337,7 +347,7 @@ export default function App() {
   const activeProgress = activeTestId ? getOrCreateProgressRecord(activeTestId) : undefined;
 
   return (
-    <MobileFrame theme={theme}>
+    <MobileFrame theme={theme} isWide={isWideFrame}>
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
       {/* Top Navbar Header */}
@@ -364,6 +374,19 @@ export default function App() {
             title="Workspace Backup & Portability settings"
           >
             <Database className="w-5 h-5 text-indigo-500" />
+          </button>
+
+          <button
+            id="frame-stretch-toggle-btn"
+            onClick={() => setIsWideFrame(!isWideFrame)}
+            className="p-2 rounded-xl flex items-center justify-center transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-slate-600 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 active:scale-95"
+            title={isWideFrame ? "Reduce screen width (Narrow View)" : "Stretch screen width (Wide View)"}
+          >
+            {isWideFrame ? (
+              <Minimize2 className="w-5 h-5 text-amber-500" />
+            ) : (
+              <Maximize2 className="w-5 h-5 text-indigo-500" />
+            )}
           </button>
           
           <ThemeToggle theme={theme} onToggle={handleToggleTheme} />

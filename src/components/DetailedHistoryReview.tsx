@@ -197,30 +197,30 @@ export default function DetailedHistoryReview({
             </div>
           </div>
 
-          {/* KPI Dashboard */}
-          <div className="grid grid-cols-4 gap-2 text-center text-xs">
-            <div className="p-2.5 bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100/40 dark:border-emerald-900/20 rounded-2xl">
-              <span className="block text-[8px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Correct</span>
-              <span className="font-black text-sm text-emerald-600 dark:text-emerald-400">+{item.score.correctCount * 4}</span>
-              <span className="block text-[9px] text-slate-450 mt-0.5 font-bold">({item.score.correctCount} Qs)</span>
+          {/* KPI Dashboard (Refined to responsive layout to prevent overlaps on mobile / narrow viewports) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center text-xs">
+            <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/15 border border-emerald-100 dark:border-emerald-900/35 rounded-2xl flex flex-col justify-center">
+              <span className="block text-[9px] uppercase tracking-wider text-emerald-500 dark:text-emerald-400 font-extrabold mb-1">Correct Answers</span>
+              <span className="font-extrabold text-base text-emerald-600 dark:text-emerald-400">+{item.score.correctCount * 4} Marks</span>
+              <span className="block text-[10px] text-slate-450 mt-1 font-bold">({item.score.correctCount} / {totalQs} Qs)</span>
             </div>
             
-            <div className="p-2.5 bg-rose-50/40 dark:bg-rose-955/10 border border-rose-100/35 dark:border-rose-900/20 rounded-2xl">
-              <span className="block text-[8px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Negative</span>
-              <span className="font-black text-sm text-rose-600 dark:text-rose-400">-{item.score.incorrectCount * 1}</span>
-              <span className="block text-[9px] text-slate-450 mt-0.5 font-bold">({item.score.incorrectCount} Qs)</span>
+            <div className="p-3 bg-rose-50/50 dark:bg-rose-955/15 border border-rose-100 dark:border-rose-900/35 rounded-2xl flex flex-col justify-center">
+              <span className="block text-[9px] uppercase tracking-wider text-rose-500 dark:text-rose-400 font-extrabold mb-1">Negative Penalty</span>
+              <span className="font-extrabold text-base text-rose-600 dark:text-rose-400">-{item.score.incorrectCount * 1} Marks</span>
+              <span className="block text-[10px] text-slate-450 mt-1 font-bold">({item.score.incorrectCount} / {totalQs} Qs)</span>
             </div>
 
-            <div className="p-2.5 bg-slate-50 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl">
-              <span className="block text-[8px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Skipped</span>
-              <span className="font-black text-sm text-slate-500 dark:text-zinc-400">0</span>
-              <span className="block text-[9px] text-slate-450 mt-0.5 font-bold">({item.score.blankCount} Qs)</span>
+            <div className="p-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl flex flex-col justify-center">
+              <span className="block text-[9px] uppercase tracking-wider text-slate-400 font-extrabold mb-1">Skipped Questions</span>
+              <span className="font-extrabold text-base text-slate-500 dark:text-zinc-400">0 Penalty</span>
+              <span className="block text-[10px] text-slate-450 mt-1 font-bold">({item.score.blankCount} Skip Qs)</span>
             </div>
 
-            <div className="p-2.5 bg-indigo-50/30 dark:bg-indigo-950/10 border border-indigo-100/30 dark:border-indigo-900/20 rounded-2xl">
-              <span className="block text-[8px] uppercase tracking-wider text-indigo-400 dark:text-indigo-400 font-extrabold mb-1">Avg Pace</span>
-              <span className="font-black text-sm text-indigo-650 dark:text-indigo-400">{avgSecPerQuestion}s</span>
-              <span className="block text-[9px] text-slate-450 mt-0.5 font-bold">Per Question</span>
+            <div className="p-3 bg-indigo-50/50 dark:bg-indigo-950/15 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl flex flex-col justify-center">
+              <span className="block text-[9px] uppercase tracking-wider text-indigo-500 dark:text-indigo-400 font-extrabold mb-1">Average Pace</span>
+              <span className="font-extrabold text-base text-indigo-650 dark:text-indigo-400">{avgSecPerQuestion}s / Q</span>
+              <span className="block text-[10px] text-slate-450 mt-1 font-bold">Recommended: &lt; 60s</span>
             </div>
           </div>
         </div>
@@ -236,14 +236,14 @@ export default function DetailedHistoryReview({
                   : "text-slate-550 dark:text-zinc-450 hover:bg-slate-200/40 dark:hover:bg-zinc-900"
               }`}
             >
-              📊 Performance Summary
+              📊 Performance Summary & Confidence Matrix
             </button>
             <button
               onClick={() => setActiveSubTab("mistakes")}
               className={`px-3 py-1.8 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                 activeSubTab === "mistakes"
                   ? "bg-rose-500/10 border border-rose-200/40 text-red-600 dark:text-rose-400 shadow-xs"
-                  : "text-slate-555 dark:text-zinc-450 hover:bg-rose-500/5"
+                  : "text-slate-550 dark:text-zinc-450 hover:bg-rose-500/5"
               }`}
             >
               ❌ Mistakes Gym ({wrongQuestions.length})
@@ -253,7 +253,7 @@ export default function DetailedHistoryReview({
               className={`px-3 py-1.8 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                 activeSubTab === "skipped"
                   ? "bg-amber-500/10 border border-amber-200/40 text-amber-600 dark:text-amber-400 shadow-xs"
-                  : "text-slate-555 dark:text-zinc-450 hover:bg-amber-500/5"
+                  : "text-slate-550 dark:text-zinc-450 hover:bg-amber-500/5"
               }`}
             >
               ❓ Skipped Qs ({skippedQuestions.length})
@@ -263,7 +263,7 @@ export default function DetailedHistoryReview({
               className={`px-3 py-1.8 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer flex items-center gap-1 ${
                 activeSubTab === "all"
                   ? "bg-indigo-500/10 border border-indigo-200/40 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                  : "text-slate-555 dark:text-zinc-450 hover:bg-indigo-500/5"
+                  : "text-slate-550 dark:text-zinc-450 hover:bg-indigo-500/5"
               }`}
             >
               📖 All Qs ({totalQs})
@@ -285,36 +285,126 @@ export default function DetailedHistoryReview({
                 </div>
 
                 <div className="bg-slate-50 dark:bg-zinc-900/60 p-3 rounded-xl border border-slate-100 dark:border-zinc-850">
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                     <span className="text-[10px] text-slate-400 font-extrabold uppercase">
                       Diagnose Bracket
                     </span>
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                    <span className={`text-[9.5px] font-black px-2 py-0.5 rounded ${
                       percentage >= 80 ? "bg-emerald-500/10 text-emerald-500" :
                       percentage >= 60 ? "bg-indigo-500/10 text-indigo-500" :
                       "bg-rose-500/10 text-rose-500"
                     }`}>
-                      {percentage >= 80 ? "PRESTIGIOUS RANKING" : percentage >= 60 ? "HIGH COMPETENCY" : "CLINICAL REMEDIALS INCOMMING"}
+                      {percentage >= 80 ? "PRESTIGIOUS RANKING" : percentage >= 60 ? "HIGH COMPETENCY" : "CLINICAL REMEDIAL TRAINING RECOMMENDED"}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-zinc-350 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-zinc-350 leading-relaxed font-medium">
                     {percentage >= 80
-                      ? "Outstanding speed and conceptual accuracy. Perfect execution, maintaining mistakes below 10%. Strongly recommend taking full 180-question simulations next to reinforce memory fatigue threshold."
-                      : percentage >= 65
-                      ? "Competitive standing. Excellent grasp on key modules, but dropping marks due to minor negative penalties. Go to your Mistake Gym right now to repair solution reasoning paths."
-                      : "We recommend reviewing basic high-yield concept summaries of NCERT text pages for the topics missed. Retest this paper blank in Study Mode to stabilize option deduction."}
+                      ? "Outstanding speed and conceptual accuracy! Perfect execution, maintaining exam mistakes below 20%. Strongly recommend taking full-syllabus physical length simulations to reinforce endurance limits."
+                      : percentage >= 60
+                      ? "Competitive standing. Excellent grasp on key modules, but dropping marks due to minor negative penalties or guess errors. Review option reasoning and confidence calibration matrix below to stop leaking points."
+                      : "We recommend reviewing basic high-yield concept summaries of NCERT text pages for the topics missed. Retest this paper blank in Study Mode to stabilize active recall deduction."}
                   </p>
                 </div>
 
                 {/* Score visualizer horizontal bar */}
                 <div className="space-y-1.5 select-none pt-1">
-                  <div className="flex items-center justify-between text-[11px] text-slate-550 dark:text-zinc-400">
+                  <div className="flex items-center justify-between text-[11px] text-slate-550 dark:text-zinc-400 font-bold">
                     <span>Performance Target Index</span>
-                    <span className="font-black">{percentage}% Match Score</span>
+                    <span className="font-extrabold">{percentage}% Match Score</span>
                   </div>
                   <div className="w-full h-2 rounded-full overflow-hidden bg-slate-100 dark:bg-zinc-800 flex">
-                    <div className="h-full bg-emerald-500 rounded-l-full" style={{ width: `${Math.max(0, percentage)}%` }} />
-                    <div className="h-full bg-red-500/80" style={{ width: `${Math.max(0, 100 - percentage)}%` }} />
+                    <div className="h-full bg-emerald-550 rounded-l-full" style={{ width: `${Math.max(0, Math.min(100, percentage))}%` }} />
+                    <div className="h-full bg-rose-500/80" style={{ width: `${Math.max(0, Math.min(100, 100 - percentage))}%` }} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Confidence vs. Reality Calibration Matrix - BRAND NEW METRIC PANEL */}
+              <div className="p-4 bg-white dark:bg-[#121214] border border-slate-150 dark:border-zinc-850 rounded-2xl space-y-3.5 shadow-xs">
+                <span className="text-[10px] font-black tracking-widest text-indigo-500 uppercase flex items-center gap-1 font-mono">
+                  ✨ Mental Calibration Matrix (Confidence vs. Fact)
+                </span>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-450 leading-relaxed">
+                  NEET ranks are lost on <strong>Overconfidence</strong> and <strong>Hesitation</strong>. This calibrator compares your marked confidence tags against actual question outcome parameters to trace cognitive biases:
+                </p>
+
+                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2.5">
+                  {/* Calibrator 1: Sure */}
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-900/60 rounded-xl border border-slate-100 dark:border-zinc-850 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-black tracking-tight text-slate-700 dark:text-zinc-200 block">
+                        🎯 marked "SURE"
+                      </span>
+                      <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                        Your absolute conviction. Mistaking here implies blindspots.
+                      </p>
+                    </div>
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/50 dark:border-zinc-800 flex items-center justify-between text-[10px] font-extrabold font-mono">
+                      <span className="text-emerald-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number] || "sure";
+                          return conf === "sure" && item.answers[q.number] === q.correctOptionIndex;
+                        }).length} Correct
+                      </span>
+                      <span className="text-rose-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number] || "sure";
+                          return conf === "sure" && item.answers[q.number] !== undefined && item.answers[q.number] !== q.correctOptionIndex;
+                        }).length} Wrong
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Calibrator 2: Doubt */}
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-900/60 rounded-xl border border-slate-100 dark:border-zinc-850 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-black tracking-tight text-slate-700 dark:text-zinc-200 block">
+                        🧐 marked "DOUBT"
+                      </span>
+                      <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                        Felt hesitant. Getting these wrong indicates weak roots.
+                      </p>
+                    </div>
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/50 dark:border-zinc-800 flex items-center justify-between text-[10px] font-extrabold font-mono">
+                      <span className="text-emerald-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number];
+                          return conf === "doubt" && item.answers[q.number] === q.correctOptionIndex;
+                        }).length} Correct
+                      </span>
+                      <span className="text-rose-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number];
+                          return conf === "doubt" && item.answers[q.number] !== undefined && item.answers[q.number] !== q.correctOptionIndex;
+                        }).length} Wrong
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Calibrator 3: Guess */}
+                  <div className="p-3 bg-slate-50 dark:bg-zinc-900/60 rounded-xl border border-slate-100 dark:border-zinc-850 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-black tracking-tight text-slate-700 dark:text-zinc-200 block">
+                        🎲 marked "GUESS"
+                      </span>
+                      <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                        Instinctive guess. Correct entries are purely random luck.
+                      </p>
+                    </div>
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/50 dark:border-zinc-800 flex items-center justify-between text-[10px] font-extrabold font-mono">
+                      <span className="text-emerald-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number];
+                          return conf === "guess" && item.answers[q.number] === q.correctOptionIndex;
+                        }).length} Correct
+                      </span>
+                      <span className="text-rose-500">
+                        {item.questions.filter(q => {
+                          const conf = item.confidences?.[q.number];
+                          return conf === "guess" && item.answers[q.number] !== undefined && item.answers[q.number] !== q.correctOptionIndex;
+                        }).length} Wrong
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

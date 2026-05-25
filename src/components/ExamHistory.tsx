@@ -87,44 +87,52 @@ export default function ExamHistory({
         </h2>
       </div>
 
-       {/* Stats Cards Dashboard (redefined as 4-Column stats grid with Overall Pace) */}
-      <div id="history-stats-dashboard" className="grid grid-cols-4 gap-2 select-none">
-        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
-          <History className="w-3.5 h-3.5 text-rose-500 mb-1" />
+       {/* Stats Cards Dashboard (redefined as a responsive stats grid to prevent narrow overlap) */}
+      <div id="history-stats-dashboard" className="grid grid-cols-2 md:grid-cols-4 gap-3 select-none">
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-805 flex items-center gap-3 shadow-xs">
+          <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-500">
+            <History className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Simulated</span>
-            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
-              {totalSimulated}
+            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider leading-none">Simulated</span>
+            <span className="font-extrabold text-base text-slate-800 dark:text-zinc-100 leading-tight">
+              {totalSimulated} <span className="text-[10px] font-medium text-slate-400">Tests</span>
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
-          <Award className="w-3.5 h-3.5 text-amber-500 mb-1" />
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-805 flex items-center gap-3 shadow-xs">
+          <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-amber-500">
+            <Award className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Best Mark</span>
-            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
+            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider leading-none">Best Mark</span>
+            <span className="font-extrabold text-base text-slate-800 dark:text-zinc-100 leading-tight">
               {bestScore > 0 ? `+${bestScore}` : bestScore}
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-500 mb-1" />
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-850 flex items-center gap-3 shadow-xs">
+          <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-500">
+            <Sparkles className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Avg. Accu.</span>
-            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
+            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider leading-none">Avg. Accu.</span>
+            <span className="font-extrabold text-base text-slate-800 dark:text-zinc-100 leading-tight">
               {averageAccuracy}%
             </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#18181b] p-2.5 rounded-2xl border border-slate-200 dark:border-zinc-800/85 flex flex-col justify-between shadow-xs">
-          <Clock className="w-3.5 h-3.5 text-indigo-500 mb-1" />
+        <div className="bg-white dark:bg-[#18181b] p-3 rounded-2xl border border-slate-200 dark:border-zinc-850 flex items-center gap-3 shadow-xs">
+          <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500">
+            <Clock className="w-4 h-4" />
+          </div>
           <div>
-            <span className="text-[8px] text-slate-400 font-bold block leading-tight">Avg. Pace</span>
-            <span className="font-extrabold text-sm text-slate-850 dark:text-zinc-100 leading-none">
-              {averagePace}s <span className="text-[8px] text-slate-450 font-normal">/Q</span>
+            <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider leading-none">Avg. Pace</span>
+            <span className="font-extrabold text-base text-slate-800 dark:text-zinc-100 leading-tight">
+              {averagePace}s <span className="text-[10px] text-slate-450 font-normal">/Q</span>
             </span>
           </div>
         </div>
@@ -202,8 +210,8 @@ export default function ExamHistory({
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                         {item.score.correctCount} Correct
                       </span>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-red-500 dark:text-rose-400 font-semibold text-rose-500">
-                        {item.score.incorrectCount} Correct
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500/10 text-rose-500 dark:text-rose-400">
+                        {item.score.incorrectCount} Incorrect
                       </span>
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-500 dark:text-zinc-400 font-semibold">
                         {item.score.blankCount} Skip
